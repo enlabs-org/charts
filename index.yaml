@@ -1,0 +1,12 @@
+apiVersion: v1
+entries:
+  preview-app:
+  - apiVersion: v1
+    created: "2023-02-22T19:12:16.012202136Z"
+    description: Helm Chart for preview apps testing
+    digest: dcebc124d8b20aae5fff0d6a47f7e30fa4b3f11e53f2d768d385ac86778258bf
+    name: preview-app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/preview-app-0.1-dev/preview-app-0.1-dev.tgz
+    version: 0.1-dev
+generated: "2023-02-22T19:12:15.712349883Z"
