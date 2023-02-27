@@ -6,6 +6,7 @@ replicas: 1
 containerPort: 80
 livenessProbePath: '/'
 restartAfterRedeploy: false
+sideContainers: []
 
 # Service
 useDefaultService: true

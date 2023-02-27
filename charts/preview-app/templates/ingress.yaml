@@ -22,6 +22,9 @@ spec:
         {{ if .Values.wwwRedirect }}
         - www.{{ .Values.host }}
         {{ end }}
+    {{- range .Values.sideContainers }}
+        - {{ .name }}-{{ $.Values.host }}
+    {{- end }}
         {{ if .Values.tlsSecretName }}
       secretName: {{ .Values.tlsSecretName}}
         {{ else }}
@@ -39,4 +42,17 @@ spec:
                 name: {{ .Release.Name }}
                 port:
                   name: http
+
+{{- range .Values.sideContainers }}
+    - host: {{ .name }}-{{ $.Values.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-{{ .name }}
+                port:
+                  name: {{ .name }}-port
+    {{- end }}
 {{ end }}

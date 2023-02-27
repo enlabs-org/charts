@@ -27,11 +27,22 @@ spec:
             - name: http
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
+
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbePath }}
-              port: http
-              httpHeaders:
-              - name: Host
-                value: {{ .Values.host }}
+                path: {{ .Values.livenessProbePath }}
+                port: http
+                httpHeaders:
+                - name: Host
+                    value: {{ .Values.host }}
+
+        {{- range .Values.sideContainers }}
+        - name: {{ .name }}
+          image: {{ .image }}
+          imagePullPolicy: {{ .imagePullPolicy | default "Always" }}
+          ports:
+            - name: {{ .name }}-port
+              containerPort: {{ .port }}
+        {{- end }}
+
 {{ end }}
