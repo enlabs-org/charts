@@ -3,11 +3,13 @@
 useDefaultDeployment: true
 image: ''
 replicas: 1
-containerPort: 80
+containerPort: 3000
 livenessProbePath: '/'
 restartAfterRedeploy: false
-sideContainers: []
-
+sideContainers:
+  - name: docs
+    port: 80
+    image: registry.digitalocean.com/ulovdomov-be/ud-fe-stage:737-docs
 # Service
 useDefaultService: true
 
@@ -16,6 +18,7 @@ useDefaultIngress: true
 host: ''
 wwwRedirect: false
 tls: true
-issueCertificate: true
+issueCertificate: false
 clusterIssuer: 'letsencrypt'
-tlsSecretName: ''
+tlsSecretName: 'k8stage-ulovdomov-tls'
+

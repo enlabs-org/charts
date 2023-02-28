@@ -28,17 +28,10 @@ spec:
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
 
-          livenessProbe:
-            httpGet:
-                path: {{ .Values.livenessProbePath }}
-                port: http
-                httpHeaders:
-                - name: Host
-                    value: {{ .Values.host }}
 
         {{- range .Values.sideContainers }}
         - name: {{ .name }}
-          image: {{ .image }}
+          image: {{ required ".Values.image is required" $.Values.image }}-{{ .name }}
           imagePullPolicy: {{ .imagePullPolicy | default "Always" }}
           ports:
             - name: {{ .name }}-port
