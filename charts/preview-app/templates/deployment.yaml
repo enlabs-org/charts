@@ -27,7 +27,11 @@ spec:
             - name: http
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
-
+        {{ if .Values.envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.envFromSecret }}
+        {{ end }}
 
         {{- range .Values.sideContainers }}
         - name: {{ .name }}
@@ -36,6 +40,11 @@ spec:
           ports:
             - name: {{ .name }}-port
               containerPort: {{ .port }}
+          {{ if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+        {{ end }}
         {{- end }}
 
 {{ end }}
