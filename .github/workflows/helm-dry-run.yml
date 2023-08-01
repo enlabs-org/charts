@@ -1,0 +1,21 @@
+name: Helm Chart Dry Run
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  test:
+    name: Helm Template Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.2.4
+
+      - name: Run Helm Template
+        run: helm template test charts/preview-app --output-dir=.build --set image=hello-world --set host=test.cz
