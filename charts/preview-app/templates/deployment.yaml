@@ -1,5 +1,6 @@
-{{ if .Values.useDefaultDeployment}}
-apiVersion: apps/v1
+---
+{{ if .Values.useDefaultDeployment }}
+apiVersion: 'apps/v1'
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}
