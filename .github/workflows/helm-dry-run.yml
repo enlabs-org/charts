@@ -19,3 +19,8 @@ jobs:
 
       - name: Run Helm Template
         run: helm template test charts/preview-app --output-dir=.build --set image=hello-world --set host=test.cz
+
+      - name: Yaml Lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .build
