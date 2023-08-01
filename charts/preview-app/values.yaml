@@ -6,6 +6,7 @@ replicas: 1
 containerPort: 80
 livenessProbePath: '/'
 restartAfterRedeploy: false
+envFromSecret: null
 sideContainers: []
 
 # Service
@@ -19,4 +20,3 @@ tls: true
 issueCertificate: true
 clusterIssuer: 'letsencrypt'
 tlsSecretName: ''
-
