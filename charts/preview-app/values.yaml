@@ -20,3 +20,6 @@ tls: true
 issueCertificate: true
 clusterIssuer: 'letsencrypt'
 tlsSecretName: ''
+
+# Jobs
+jobs: []
