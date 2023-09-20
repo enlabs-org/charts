@@ -13,6 +13,13 @@ metadata:
     {{ if .Values.issueCertificate }}
     cert-manager.io/cluster-issuer: {{ .Values.clusterIssuer }}
     {{ end }}
+    {{ if .Values.basicAuth }}
+    {{ if and (.Values.basicAuth.username) (.Values.basicAuth.password)  }}
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ .Release.Name }}-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    {{ end }}
+    {{ end }}
 spec:
   ingressClassName: nginx
   {{ if .Values.tls }}
@@ -22,9 +29,6 @@ spec:
         {{ if .Values.wwwRedirect }}
         - www.{{ .Values.host }}
         {{ end }}
-    {{- range .Values.sideContainers }}
-        - {{ .name }}-{{ $.Values.host }}
-    {{- end }}
         {{ if .Values.tlsSecretName }}
       secretName: {{ .Values.tlsSecretName}}
         {{ else }}
@@ -42,17 +46,4 @@ spec:
                 name: {{ .Release.Name }}
                 port:
                   name: http
-
-{{- range .Values.sideContainers }}
-    - host: {{ .name }}-{{ $.Values.host }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}
-                port:
-                  name: {{ .name }}-port
-    {{- end }}
 {{ end }}
