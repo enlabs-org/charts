@@ -36,8 +36,17 @@ spec:
 
         {{- range .Values.sideContainers }}
         - name: {{ .name }}
-          image: {{ required ".Values.image is required" $.Values.image }}-{{ .name }}
+        {{ if .sameAsMain }}
+          image: {{ required "$.Values.image is required" $.Values.image }}
+        {{ else if .image }}
+          image: {{ required ".image is required" .image }}
+        {{ else }}
+          image: {{ required "$.Values.image is required" $.Values.image }}-{{ .name }}
+        {{ end }}
           imagePullPolicy: {{ .imagePullPolicy | default "Always" }}
+        {{ if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+        {{ end }}
           ports:
             - name: {{ .name }}-port
               containerPort: {{ .port }}
