@@ -8,6 +8,7 @@ livenessProbePath: '/'
 restartAfterRedeploy: false
 envFromSecret: null
 sideContainers: []
+env: null
 
 # Service
 useDefaultService: true
