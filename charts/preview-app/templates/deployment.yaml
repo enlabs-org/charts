@@ -20,6 +20,35 @@ spec:
       labels:
         release: {{ .Release.Name }}
     spec:
+    {{ if .Values.initContainers }}
+      initContainers:
+        {{- range .Values.initContainers }}
+        - name: {{ .name }}
+        {{ if .sameAsMain }}
+          image: {{ required "$.Values.image is required" $.Values.image }}
+        {{ else if .image }}
+          image: {{ required ".image is required" .image }}
+        {{ else }}
+          image: {{ required "$.Values.image is required" $.Values.image }}-{{ .name }}
+        {{ end }}
+          imagePullPolicy: {{ .imagePullPolicy | default "Always" }}
+        {{ if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+        {{ end }}
+          {{ if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+        {{ end }}
+        {{ if $.Values.env }}
+          env:
+            - name: {{ $.Values.env.name }}
+              value: {{ $.Values.env.value | quote }}
+
+        {{ end }}
+        {{- end }}
+        {{ end }}
+
       containers:
         - name: main
           image: {{ required ".Values.image is required" .Values.image }}
