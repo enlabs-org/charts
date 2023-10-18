@@ -18,6 +18,11 @@ spec:
         - secretRef:
             name: {{ .envFromSecret }}
     {{ end }}
+    {{ if $.Values.env }}
+        env:
+        - name: {{ $.Values.env.name }}
+          value: {{ $.Values.env.value | quote }}
+    {{ end }}
       restartPolicy: {{ .restartPolicy }}
   backoffLimit: 3
 {{- end }}
