@@ -12,6 +12,7 @@ spec:
       containers:
       - name: {{ .name }}
         image: {{ $.Values.image }}
+        imagePullPolicy: {{ $.Values.imagePullPolicy | default "Always" }}
         command: ['sh', '-c', {{ .command | quote }}]
     {{ if .envFromSecret }}
         envFrom:
