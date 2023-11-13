@@ -105,4 +105,13 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/preview-app-0.1-dev/preview-app-0.1-dev.tgz
     version: 0.1-dev
+  stable-app:
+  - apiVersion: v1
+    created: "2023-11-13T09:44:38.25732341Z"
+    description: Helm Chart for release stable app
+    digest: 91164564c714c2789e0e48a7a65bb72e5e9820a1bf3f00653f39e270a16c3f1e
+    name: stable-app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
+    version: 1.0.0-rc
 generated: "2023-02-22T19:12:15.712349883Z"
