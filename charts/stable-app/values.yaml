@@ -1,0 +1,26 @@
+---
+# Deployment
+useDefaultDeployment: true
+image: ''
+replicas: 1
+containerPort: 80
+livenessProbePath: '/'
+restartAfterRedeploy: false
+envFromSecret: null
+initContainers: []
+
+# Service
+useDefaultService: true
+
+# Ingress
+useDefaultIngress: true
+host: ''
+wwwRedirect: false
+tls: true
+issueCertificate: true
+clusterIssuer: 'letsencrypt'
+tlsSecretName: ''
+basicAuth: false
+
+# Jobs
+jobs: []

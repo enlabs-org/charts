@@ -1,0 +1,49 @@
+{{ if .Values.useDefaultIngress}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    release: {{ .Release.Name }}
+
+  annotations:
+    {{ if .Values.wwwRedirect }}
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    {{ end }}
+    {{ if .Values.issueCertificate }}
+    cert-manager.io/cluster-issuer: {{ .Values.clusterIssuer }}
+    {{ end }}
+    {{ if .Values.basicAuth }}
+    {{ if and (.Values.basicAuth.username) (.Values.basicAuth.password)  }}
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ .Release.Name }}-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    {{ end }}
+    {{ end }}
+spec:
+  ingressClassName: nginx
+  {{ if .Values.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.host }}
+        {{ if .Values.wwwRedirect }}
+        - www.{{ .Values.host }}
+        {{ end }}
+        {{ if .Values.tlsSecretName }}
+      secretName: {{ .Values.tlsSecretName}}
+        {{ else }}
+      secretName: {{ .Release.Name }}-tls
+      {{ end }}
+  {{ end }}
+  rules:
+    - host: {{ required ".Values.host is required" .Values.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}
+                port:
+                  name: http
+{{ end }}

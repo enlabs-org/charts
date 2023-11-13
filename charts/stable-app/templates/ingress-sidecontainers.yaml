@@ -1,0 +1,46 @@
+{{ if .Values.useDefaultIngress}}
+{{- range .Values.sideContainers }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+  labels:
+    release: {{ $.Release.Name }}
+
+  annotations:
+    {{ if $.Values.issueCertificate }}
+    cert-manager.io/cluster-issuer: {{ $.Values.clusterIssuer }}
+    {{ end }}
+    {{ if .basicAuth | default false }}
+    {{ if and (.basicAuth.username) (.basicAuth.password)  }}
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ $.Release.Name }}-{{ .name }}-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    {{ end }}
+    {{ end }}
+spec:
+  ingressClassName: nginx
+  {{ if $.Values.tls }}
+  tls:
+    - hosts:
+        - {{ .name }}-{{ $.Values.host }}
+        {{ if $.Values.tlsSecretName }}
+      secretName: {{ $.Values.tlsSecretName}}
+        {{ else }}
+      secretName: {{ $.Release.Name }}-{{ .name }}-tls
+      {{ end }}
+  {{ end }}
+  rules:
+    - host: {{ .name }}-{{ $.Values.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}
+                port:
+                  name: {{ .name }}-port
+    {{- end }}
+{{ end }}
