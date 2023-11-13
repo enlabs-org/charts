@@ -1,0 +1,69 @@
+---
+{{ if .Values.useDefaultDeployment }}
+apiVersion: 'apps/v1'
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+      {{ if .Values.restartAfterRedeploy }}
+        rollme: {{ randAlphaNum 5 | quote }}
+      {{ end }}
+      labels:
+        release: {{ .Release.Name }}
+    spec:
+    {{ if .Values.initContainers }}
+      initContainers:
+        {{- range .Values.initContainers }}
+        - name: {{ .name }}
+        {{ if .sameAsMain }}
+          image: {{ required "$.Values.image is required" $.Values.image }}
+        {{ else if .image }}
+          image: {{ required ".image is required" .image }}
+        {{ else }}
+          image: {{ required "$.Values.image is required" $.Values.image }}-{{ .name }}
+        {{ end }}
+          imagePullPolicy: {{ .imagePullPolicy | default "Always" }}
+        {{ if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+        {{ end }}
+          {{ if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+        {{ end }}
+        {{- end }}
+        {{ end }}
+
+      containers:
+        - name: main
+          image: {{ required ".Values.image is required" .Values.image }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+        {{ if .Values.envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.envFromSecret }}
+        {{ end }}
+        {{ if .Values.livenessProbePath }}
+          livenessProbe:
+            httpGet:
+            path: {{ .Values.livenessProbePath }}
+            port: http
+            httpHeaders:
+              - name: Host
+                value: {{ .Values.host }}
+        {{ end }}
+
+{{ end }}

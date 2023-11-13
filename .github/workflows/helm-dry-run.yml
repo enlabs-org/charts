@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Helm
         uses: azure/setup-helm@v1
@@ -21,7 +21,7 @@ jobs:
           version: v3.2.4
 
       - name: Run Helm Template
-        run: helm template test charts/preview-app --output-dir=.build --set image=hello-world --set host=test.cz
+        run: make test
 
       - name: Yaml Lint
         uses: ibiqlik/action-yamllint@v3

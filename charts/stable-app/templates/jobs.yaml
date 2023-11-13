@@ -1,0 +1,24 @@
+{{- range .Values.jobs }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}-{{ randAlphaNum 5 | lower }}
+  labels:
+    release: {{ $.Release.Name }}
+spec:
+  template:
+    spec:
+      containers:
+      - name: {{ .name }}
+        image: {{ $.Values.image }}
+        imagePullPolicy: {{ $.Values.imagePullPolicy | default "Always" }}
+        command: ['sh', '-c', {{ .command | quote }}]
+    {{ if .envFromSecret }}
+        envFrom:
+        - secretRef:
+            name: {{ .envFromSecret }}
+    {{ end }}
+      restartPolicy: {{ .restartPolicy }}
+  backoffLimit: 3
+{{- end }}
