@@ -23,6 +23,8 @@ issueCertificate: true
 clusterIssuer: 'letsencrypt'
 tlsSecretName: ''
 basicAuth: false
+fcgi: false
+fcgi_script_filename: ''
 
 # Jobs
 jobs: []

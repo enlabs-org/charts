@@ -1,0 +1,9 @@
+{{ if .Values.fcgi}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-fcgi-cm
+data:
+  SCRIPT_FILENAME: "{{ .Values.fcgi_script_filename }}"
+{{ end }}
