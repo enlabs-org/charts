@@ -115,6 +115,14 @@ entries:
     version: 0.1-dev
   stable-app:
   - apiVersion: v1
+    created: "2023-11-21T09:49:43.948414347Z"
+    description: Helm Chart for release stable app
+    digest: b51dd64296764224911345b19f1617d06beca72f2dd65aa3ac89f1b1bbc35a76
+    name: stable-app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0/stable-app-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v1
     created: "2023-11-13T09:44:38.25732341Z"
     description: Helm Chart for release stable app
     digest: 91164564c714c2789e0e48a7a65bb72e5e9820a1bf3f00653f39e270a16c3f1e
