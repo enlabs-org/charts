@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ingress-fcgi-cm
+  name: {{ .Release.Name }}-ingress-fcgi-cm
 data:
   SCRIPT_FILENAME: "{{ .Values.fcgi_script_filename }}"
 {{ end }}
