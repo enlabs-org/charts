@@ -69,6 +69,17 @@ spec:
               value: {{ .Values.env.value | quote }}
 
         {{ end }}
+        {{ if .Values.livenessProbePath }}
+          livenessProbe:
+            httpGet:
+                path: {{ .Values.livenessProbePath }}
+                port: http
+        {{ if .Values.host }}
+            httpHeaders:
+              - name: Host
+                value: {{ .Values.host }}
+        {{ end }}
+        {{ end }}
 
         {{- range .Values.sideContainers }}
         - name: {{ .name }}
