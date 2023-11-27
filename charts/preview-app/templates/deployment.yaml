@@ -75,9 +75,9 @@ spec:
                 path: {{ .Values.livenessProbePath }}
                 port: http
         {{ if .Values.host }}
-            httpHeaders:
-              - name: Host
-                value: {{ .Values.host }}
+                httpHeaders:
+                  - name: Host
+                    value: {{ .Values.host }}
         {{ end }}
         {{ end }}
 
