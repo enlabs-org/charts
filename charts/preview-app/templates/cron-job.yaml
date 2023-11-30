@@ -1,0 +1,27 @@
+{{- range .Values.cronJobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+  labels:
+    release: {{ $.Release.Name }}
+spec:
+  schedule: "{{ .schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{ .name }}
+            image: {{ $.Values.image }}
+            imagePullPolicy: {{ $.Values.imagePullPolicy | default "Always" }}
+            command: ['sh', '-c', {{ .command | quote }}]
+            {{ if .envFromSecret }}
+            envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+    {{ end }}
+          restartPolicy: {{ .restartPolicy | default "OnFailure" }}
+      backoffLimit: 3
+{{- end }}

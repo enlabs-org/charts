@@ -28,3 +28,6 @@ fcgi_script_filename: ''
 
 # Jobs
 jobs: []
+
+# CronJobs
+cronJobs: []
