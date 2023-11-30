@@ -24,3 +24,6 @@ basicAuth: false
 
 # Jobs
 jobs: []
+
+# CronJobs
+cronJobs: []
