@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    environment: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: metabase
+          image: {{ .Values.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MB_DB_TYPE
+              value: {{ .Values.database.type }}
+            {{- if .Values.database.host }}
+            - name: MB_DB_HOST
+              value: {{ .Values.database.host }}
+            {{- end }}
+            {{- if .Values.database.port }}
+            - name: MB_DB_PORT
+              value: {{ .Values.database.port }}
+            {{- end }}
+            {{- if .Values.database.user }}
+            - name: MB_DB_USER
+              value: {{ .Values.database.user }}
+            {{- end }}
+            {{- if .Values.database.password }}
+            - name: MB_DB_PASS
+              value: {{ .Values.database.password }}
+            {{- end }}
+            {{- if .Values.database.name }}
+            - name: MB_DB_DBNAME
+              value: {{ .Values.database.name }}
+            {{- end }}

@@ -1,0 +1,22 @@
+---
+# Deployment
+image: 'metabase/metabase:latest'
+replicas: 1
+imagePullPolicy: 'Always'
+database:
+  type: 'h2'
+  host: ''
+  port: ''
+  name: ''
+  user: ''
+  password: ''
+
+
+# Ingress
+ingress:
+  enabled: false
+  host: ''
+  tls: true
+  issueCertificate: true
+  clusterIssuer: 'letsencrypt'
+  tlsSecretName: ''
