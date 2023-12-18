@@ -1,5 +1,14 @@
 apiVersion: v1
 entries:
+  metabase:
+  - apiVersion: v1
+    created: "2023-12-18T12:37:26.911363532Z"
+    description: Helm Chart for install Metabase
+    digest: e117ddf04aa279d4d5957b9f1c9afc817f545af76753edb18027021f0df84e73
+    name: metabase
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/metabase-1.0.0/metabase-1.0.0.tgz
+    version: 1.0.0
   preview-app:
   - apiVersion: v1
     created: "2023-11-30T15:24:17.692011065Z"
