@@ -2,4 +2,4 @@
 apiVersion: v1
 description: Helm Chart for install Metabase
 name: metabase
-version: 1.0.0
+version: 1.0.1
