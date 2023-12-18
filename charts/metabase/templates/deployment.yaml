@@ -24,10 +24,10 @@ spec:
             - containerPort: 3000
           env:
             - name: MB_DB_TYPE
-              value: {{ .Values.database.type }}
+              value: {{ .Values.database.type | quote }}
             {{- if .Values.database.host }}
             - name: MB_DB_HOST
-              value: {{ .Values.database.host }}
+              value: {{ .Values.database.host | quote }}
             {{- end }}
             {{- if .Values.database.port }}
             - name: MB_DB_PORT
@@ -35,13 +35,13 @@ spec:
             {{- end }}
             {{- if .Values.database.user }}
             - name: MB_DB_USER
-              value: {{ .Values.database.user }}
+              value: {{ .Values.database.user | quote }}
             {{- end }}
             {{- if .Values.database.password }}
             - name: MB_DB_PASS
-              value: {{ .Values.database.password }}
+              value: {{ .Values.database.password | quote }}
             {{- end }}
             {{- if .Values.database.name }}
             - name: MB_DB_DBNAME
-              value: {{ .Values.database.name }}
+              value: {{ .Values.database.name | quote }}
             {{- end }}
