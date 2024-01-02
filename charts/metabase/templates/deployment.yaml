@@ -31,7 +31,7 @@ spec:
             {{- end }}
             {{- if .Values.database.port }}
             - name: MB_DB_PORT
-              value: {{ .Values.database.port }}
+              value: {{ .Values.database.port | quote }}
             {{- end }}
             {{- if .Values.database.user }}
             - name: MB_DB_USER
