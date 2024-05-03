@@ -13,6 +13,14 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+{{- range .Values.sideContainers }}
+    {{ if .port }}
+    - port: {{ .port }}
+      targetPort: {{ .name }}-port
+      protocol: TCP
+      name: {{ .name }}-port
+    {{ end }}
+{{- end }}
   selector:
     release: {{ .Release.Name }}
 {{ end }}

@@ -68,4 +68,28 @@ spec:
         {{ end }}
         {{ end }}
 
+        {{- range .Values.sideContainers }}
+        - name: {{ .name }}
+        {{ if .sameAsMain }}
+          image: {{ required "$.Values.image is required" $.Values.image }}
+        {{ else if .image }}
+          image: {{ required ".image is required" .image }}
+        {{ else }}
+          image: {{ required "$.Values.image is required" $.Values.image }}-{{ .name }}
+        {{ end }}
+          imagePullPolicy: {{ .imagePullPolicy | default "Always" }}
+        {{ if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+        {{ end }}
+        {{ if .port }}
+          ports:
+            - name: {{ .name }}-port
+              containerPort: {{ .port }}
+          {{ end }}
+          {{ if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+        {{ end }}
+        {{- end }}
 {{ end }}
