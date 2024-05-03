@@ -94,9 +94,11 @@ spec:
         {{ if .command }}
           command: ['sh', '-c', {{ .command | quote }}]
         {{ end }}
+        {{ if .port }}
           ports:
             - name: {{ .name }}-port
               containerPort: {{ .port }}
+          {{ end }}
           {{ if .envFromSecret }}
           envFrom:
             - secretRef:
