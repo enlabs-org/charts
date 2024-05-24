@@ -20,6 +20,11 @@ metadata:
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
     {{ end }}
     {{ end }}
+    {{ if .Values.fcgi }}
+    nginx.ingress.kubernetes.io/backend-protocol: "FCGI"
+    nginx.ingress.kubernetes.io/fastcgi-index: "index.php"
+    nginx.ingress.kubernetes.io/fastcgi-params-configmap: "{{ .Release.Name }}-ingress-fcgi-cm"
+    {{ end }}
 spec:
   ingressClassName: nginx
   {{ if .Values.tls }}
