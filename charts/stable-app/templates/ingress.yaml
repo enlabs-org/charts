@@ -25,6 +25,9 @@ metadata:
     nginx.ingress.kubernetes.io/fastcgi-index: "index.php"
     nginx.ingress.kubernetes.io/fastcgi-params-configmap: "{{ .Release.Name }}-ingress-fcgi-cm"
     {{ end }}
+    {{ if .Values.proxyBodySize }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.proxyBodySize | quote }}
+    {{ end }}
 spec:
   ingressClassName: nginx
   {{ if .Values.tls }}
