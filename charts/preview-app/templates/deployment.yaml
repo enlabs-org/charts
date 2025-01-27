@@ -62,12 +62,12 @@ spec:
             - secretRef:
                 name: {{ .Values.envFromSecret }}
         {{ end }}
-
-        {{ if .Values.env }}
           env:
+            - name: "IMAGE"
+              value: {{ .Values.image | quote }}
+        {{ if .Values.env }}
             - name: {{ .Values.env.name }}
               value: {{ .Values.env.value | quote }}
-
         {{ end }}
         {{ if .Values.livenessProbePath }}
           livenessProbe:
