@@ -27,6 +27,14 @@ entries:
     version: 1.0.0
   preview-app:
   - apiVersion: v1
+    created: "2025-01-27T14:36:06.765951584Z"
+    description: Helm Chart for preview apps testing
+    digest: c160b0ab6efbad0e3b4afadc3104c51dd3f602f75fd49c75eaee0fc03330797e
+    name: preview-app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/preview-app-1.12.0/preview-app-1.12.0.tgz
+    version: 1.12.0
+  - apiVersion: v1
     created: "2024-09-09T10:26:51.360976328Z"
     description: Helm Chart for preview apps testing
     digest: 7ae7526b8c07ee5d1f571f0699cb1db473c860bd62f545af174d98d34d9ed381
@@ -195,6 +203,14 @@ entries:
     - https://github.com/enlabs-org/charts/releases/download/preview-app-0.1-dev/preview-app-0.1-dev.tgz
     version: 0.1-dev
   stable-app:
+  - apiVersion: v1
+    created: "2025-01-27T14:36:06.893863577Z"
+    description: Helm Chart for release stable app
+    digest: 341d013caa8ac9bd1b3490459872d81214f14c2c7e349df75ba0347427f9511a
+    name: stable-app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/stable-app-1.5.0/stable-app-1.5.0.tgz
+    version: 1.5.0
   - apiVersion: v1
     created: "2024-09-09T10:26:51.579041579Z"
     description: Helm Chart for release stable app
