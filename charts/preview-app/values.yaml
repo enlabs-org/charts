@@ -10,6 +10,8 @@ envFromSecret: null
 sideContainers: []
 initContainers: []
 env: null
+useDatabaseCert: true
+databaseCert: /etc/do-secret
 
 # Service
 useDefaultService: true
@@ -31,3 +33,5 @@ jobs: []
 
 # CronJobs
 cronJobs: []
+
+initContainers: []
