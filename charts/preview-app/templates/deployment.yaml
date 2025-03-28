@@ -48,7 +48,7 @@ spec:
         {{ end }}
 
         {{ if $.Values.useDatabaseCert }}
-          volumesMounts:
+          volumeMounts:
             - name: database-cert
               mountPath: {{ $.Values.databaseCert }}
               readOnly: true
@@ -88,8 +88,8 @@ spec:
                     value: {{ .Values.host }}
         {{ end }}
         {{ end }}
-                {{ if $.Values.useDatabaseCert }}
-          volumesMounts:
+        {{ if $.Values.useDatabaseCert }}
+          volumeMounts:
             - name: database-cert
               mountPath: {{ $.Values.databaseCert }}
               readOnly: true
@@ -119,7 +119,7 @@ spec:
                 name: {{ .envFromSecret }}
         {{ end }}
                 {{ if $.Values.useDatabaseCert }}
-          volumesMounts:
+          volumeMounts:
             - name: database-cert
               mountPath: {{ $.Values.databaseCert }}
               readOnly: true
