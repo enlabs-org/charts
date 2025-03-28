@@ -20,8 +20,11 @@ jobs:
         with:
           version: v3.2.4
 
+      - name: Run Helm Lint
+        run: make helm-lint
+
       - name: Run Helm Template
-        run: make test
+        run: make helm-template
 
       - name: Yaml Lint
         uses: ibiqlik/action-yamllint@v3
