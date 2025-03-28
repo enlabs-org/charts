@@ -27,3 +27,8 @@ jobs:
         uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: .build
+      
+      - name: Validate Kubernetes manifests
+        uses: instrumenta/kubeval-action@master
+        with:
+          files: .build
