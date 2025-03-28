@@ -1,4 +1,4 @@
-name: Helm Chart Dry Run
+name: CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Helm Template Test
+    name: Helm Chart Lint and Validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
