@@ -1,0 +1,16 @@
+---
+# Deployment
+image: 'adminer:latest'
+replicas: 1
+imagePullPolicy: 'Always'
+
+
+# Ingress
+ingress:
+  enabled: false
+  host: ''
+  tls: true
+  issueCertificate: true
+  clusterIssuer: 'letsencrypt'
+  tlsSecretName: ''
+  whitelistSourceRange: null # Allow all IPs, adjust as necessary
