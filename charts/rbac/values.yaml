@@ -1,0 +1,12 @@
+---
+installRoles: false
+
+user: 
+  namespace: access
+  name: ''
+  
+access:
+  allNamespaces: false
+  clusterAdmin: false
+  namespaceAdmin: false
+  allowedNamespaces: []

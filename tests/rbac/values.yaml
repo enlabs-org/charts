@@ -1,0 +1,7 @@
+installRoles: true
+
+user: 
+  namespace: access
+  name: 'tester'
+access:
+  allNamespaces: true
