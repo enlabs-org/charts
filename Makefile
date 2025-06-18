@@ -10,15 +10,21 @@ template-metabase:
 	rm -rf .build/metabase
 	helm template test-metabase charts/metabase --output-dir=.build --debug
 
+template-adminer:
+	rm -rf .build/adminer
+	helm template test-adminer charts/adminer --output-dir=.build -f tests/adminer/values.yaml --debug
+
 helm-template:
 	make template-preview-app
 	make template-stable-app
 	make template-metabase
+	make template-adminer
 
 helm-lint:
 	helm lint charts/preview-app
 	helm lint charts/stable-app
 	helm lint charts/metabase
+	helm lint charts/adminer
 
 clean:
 	rm -rf .build

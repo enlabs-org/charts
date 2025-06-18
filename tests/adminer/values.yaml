@@ -1,0 +1,4 @@
+ingress:
+  enabled: true
+  host: 'adminer.example.com' # Replace with your desired hostname
+  whitelistSourceRange: '0.0.0.0/0' # Allow all IPs, adjust as necessary
