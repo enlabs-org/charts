@@ -1,5 +1,14 @@
 apiVersion: v1
 entries:
+  adminer:
+  - apiVersion: v1
+    created: "2025-06-18T06:58:49.968579505Z"
+    description: Helm Chart for installing Adminer
+    digest: b0ea52c0522d957346f6d1610f7c3f8796908a0ec81ec1f1253956270c968ac9
+    name: adminer
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/adminer-1.0.0/adminer-1.0.0.tgz
+    version: 1.0.0
   metabase:
   - apiVersion: v1
     created: "2024-01-02T12:40:02.178748728Z"
@@ -291,4 +300,4 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
     version: 1.0.0-rc
-generated: "2025-03-28T09:19:25.734470911Z"
+generated: "2025-06-18T06:58:49.968672821Z"
