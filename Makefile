@@ -12,7 +12,7 @@ template-metabase:
 
 template-adminer:
 	rm -rf .build/adminer
-	helm template test-adminer charts/adminer --output-dir=.build --debug
+	helm template test-adminer charts/adminer --output-dir=.build -f tests/adminer/values.yaml --debug
 
 helm-template:
 	make template-preview-app
