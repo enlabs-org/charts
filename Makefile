@@ -14,6 +14,10 @@ template-adminer:
 	rm -rf .build/adminer
 	helm template test-adminer charts/adminer --output-dir=.build -f tests/adminer/values.yaml --debug
 
+template-n8n:
+	rm -rf .build/n8n
+	helm template test-n8n charts/n8n --output-dir=.build --debug
+
 helm-template:
 	make template-preview-app
 	make template-stable-app

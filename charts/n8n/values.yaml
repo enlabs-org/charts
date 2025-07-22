@@ -1,0 +1,16 @@
+---
+# Deployment
+image: 'docker.n8n.io/n8nio/n8n'
+replicas: 1
+imagePullPolicy: 'Always'
+
+
+# Ingress
+ingress:
+  enabled: false
+  host: ''
+  tls: true
+  issueCertificate: true
+  clusterIssuer: 'letsencrypt'
+  tlsSecretName: ''
+  whitelistSourceRange: null # Allow all IPs, adjust as necessary
