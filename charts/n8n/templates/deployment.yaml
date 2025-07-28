@@ -20,5 +20,10 @@ spec:
         - name: n8n
           image: {{ .Values.image }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{ if .Values.envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.envFromSecret }}
+          {{ end }}
           ports:
             - containerPort: 5678

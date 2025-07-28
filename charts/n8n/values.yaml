@@ -3,7 +3,7 @@
 image: 'docker.n8n.io/n8nio/n8n'
 replicas: 1
 imagePullPolicy: 'Always'
-
+envFromSecret: null
 
 # Ingress
 ingress:
