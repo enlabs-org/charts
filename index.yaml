@@ -34,6 +34,15 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/metabase-1.0.0/metabase-1.0.0.tgz
     version: 1.0.0
+  n8n:
+  - apiVersion: v1
+    created: "2025-07-28T06:33:51.941298139Z"
+    description: Helm Chart for installing self-hosted n8n workflow automation tool
+    digest: deaf4ea5f30f716f36b32afabd2b58cfde2fe2b46c1afdad6d3c59c8578e04a7
+    name: n8n
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/n8n-1.0.0/n8n-1.0.0.tgz
+    version: 1.0.0
   preview-app:
   - apiVersion: v1
     created: "2025-03-28T09:19:25.73423852Z"
@@ -300,4 +309,4 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
     version: 1.0.0-rc
-generated: "2025-06-18T06:58:49.968672821Z"
+generated: "2025-07-28T06:33:51.94138397Z"
