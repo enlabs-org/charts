@@ -1,6 +1,6 @@
 installRoles: true
 
-user: 
+user:
   namespace: access
   name: 'tester'
 access:

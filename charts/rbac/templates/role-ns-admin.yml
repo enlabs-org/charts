@@ -29,7 +29,7 @@ rules:
     resources: ["*"]
     verbs: ["*"]
 
-  # Role a RoleBinding (lokální RBAC)
+  # Role a RoleBinding (local RBAC)
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["roles", "rolebindings"]
     verbs: ["*"]

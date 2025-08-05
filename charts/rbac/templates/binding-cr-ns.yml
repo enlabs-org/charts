@@ -9,6 +9,6 @@ subjects:
     namespace: {{ .Values.user.namespace }}
 roleRef:
   kind: ClusterRole
-  name: namespaces-admin
+  name: namespace-admin
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
