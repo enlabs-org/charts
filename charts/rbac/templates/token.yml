@@ -1,0 +1,10 @@
+{{ if .Values.user.name }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.user.name }}-token
+  namespace: {{ .Values.user.namespace }}
+  annotations:
+    kubernetes.io/service-account.name: {{ .Values.user.name }}
+type: kubernetes.io/service-account-token
+{{ end }}

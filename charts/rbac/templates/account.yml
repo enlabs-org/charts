@@ -1,0 +1,7 @@
+{{ if .Values.user.name }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.user.name }}
+  namespace: {{ .Values.user.namespace }}
+{{ end }}

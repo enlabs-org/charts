@@ -18,17 +18,23 @@ template-n8n:
 	rm -rf .build/n8n
 	helm template test-n8n charts/n8n --output-dir=.build --debug
 
+template-rbac:
+	rm -rf .build/rbac
+	helm template test-user charts/rbac --output-dir=.build -f tests/rbac/values.yaml --debug
+
 helm-template:
 	make template-preview-app
 	make template-stable-app
 	make template-metabase
 	make template-adminer
+	make template-rbac
 
 helm-lint:
 	helm lint charts/preview-app
 	helm lint charts/stable-app
 	helm lint charts/metabase
 	helm lint charts/adminer
+	helm lint charts/rbac
 
 clean:
 	rm -rf .build
