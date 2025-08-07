@@ -2,6 +2,7 @@
 # Deployment
 useDefaultDeployment: true
 image: ''
+command: null
 replicas: 1
 containerPort: 80
 livenessProbePath: '/'

@@ -46,6 +46,9 @@ spec:
       containers:
         - name: main
           image: {{ required ".Values.image is required" .Values.image }}
+          {{ if .Values.command }}
+          command: ['sh', '-c', {{ .Values.command | quote }}]
+          {{ end }}
           imagePullPolicy: Always
           ports:
             - name: http
