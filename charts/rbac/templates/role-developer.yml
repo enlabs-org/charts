@@ -8,6 +8,10 @@ rules:
     resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "configmaps", "secrets"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 
+  - apiGroups: [""]
+    resources: ["pods/exec", "pods/attach", "pods/portforward", "pods/log"]
+    verbs: ["get", "list", "create"]
+
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets", "statefulsets"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
