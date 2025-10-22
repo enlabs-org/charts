@@ -4,7 +4,7 @@ template-preview-app:
 
 template-stable-app:
 	rm -rf .build/stable-app
-	helm template test-stable-app charts/stable-app --output-dir=.build --set image=my-stable-app-image --set host=stable-app.example.com --debug
+	helm template test-stable-app charts/stable-app --output-dir=.build --set image=my-stable-app-image --set host=stable-app.example.com -f tests/preview-app/values.yaml --debug
 
 template-metabase:
 	rm -rf .build/metabase

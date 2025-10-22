@@ -9,6 +9,8 @@ livenessProbePath: '/'
 restartAfterRedeploy: false
 envFromSecret: null
 initContainers: []
+useDatabaseCert: false
+databaseCert: null
 
 # Service
 useDefaultService: true

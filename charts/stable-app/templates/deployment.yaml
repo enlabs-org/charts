@@ -40,6 +40,12 @@ spec:
             - secretRef:
                 name: {{ .envFromSecret }}
         {{ end }}
+                {{ if $.Values.useDatabaseCert }}
+          volumeMounts:
+            - name: database-cert
+              mountPath: {{ $.Values.databaseCert }}
+              readOnly: true
+        {{ end }}
         {{- end }}
         {{ end }}
 
@@ -73,6 +79,12 @@ spec:
                     value: {{ .Values.host }}
         {{ end }}
         {{ end }}
+                {{ if $.Values.useDatabaseCert }}
+          volumeMounts:
+            - name: database-cert
+              mountPath: {{ $.Values.databaseCert }}
+              readOnly: true
+        {{ end }}
 
         {{- range .Values.sideContainers }}
         - name: {{ .name }}
@@ -97,5 +109,18 @@ spec:
             - secretRef:
                 name: {{ .envFromSecret }}
         {{ end }}
+        {{ if $.Values.useDatabaseCert }}
+          volumeMounts:
+            - name: database-cert
+              mountPath: {{ $.Values.databaseCert }}
+              readOnly: true
+        {{ end }}
         {{- end }}
+        {{ if $.Values.useDatabaseCert }}
+      volumes:
+        - name: database-cert
+          secret:
+            secretName: database-cert
+    
+        {{ end }}
 {{ end }}
