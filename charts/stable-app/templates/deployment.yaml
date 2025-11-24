@@ -90,8 +90,8 @@ spec:
         - name: {{ .name }}
         {{ if .sameAsMain }}
           image: {{ required "$.Values.image is required" $.Values.image }}
-        {{ else if .image }}
-          image: {{ required ".image is required" .image }}
+        {{ else if .sideImage }}
+          image: {{ required ".sideImage is required" .sideImage }}
         {{ else }}
           image: {{ required "$.Values.image is required" $.Values.image }}-{{ .name }}
         {{ end }}
