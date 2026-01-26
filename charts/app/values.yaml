@@ -1,0 +1,151 @@
+---
+# =============================================================================
+# GLOBAL SETTINGS
+# =============================================================================
+# These settings apply to all components unless overridden
+
+global:
+  # Image pull policy for all containers
+  imagePullPolicy: Always
+
+  # Custom labels applied to all resources
+  # Example:
+  #   labels:
+  #     app.example.com/environment: "staging"
+  #     app.example.com/team: "platform"
+  labels: {}
+
+  # Default environment secret (can be overridden per component)
+  envFromSecret: null
+
+  # Database certificate configuration
+  useDatabaseCert: false
+  databaseCert:
+    mountPath: "/etc/ssl/certs"
+    secretName: "database-cert"
+
+  # Restart all pods on every deployment (adds random annotation)
+  restartAfterRedeploy: false
+
+# =============================================================================
+# COMPONENTS
+# =============================================================================
+# Each component creates one Deployment + optional Service + optional Ingress
+# Key = component name (used in resource naming)
+#
+# Example:
+#   components:
+#     web:
+#       enabled: true
+#       image: "myapp-web:latest"
+#       replicas: 2
+#       containerPort: 80
+#       command: null
+#       labels:
+#         app.example.com/scaling: "enabled"
+#         app.example.com/shutdown-outside-hours: "true"
+#       resources:
+#         requests:
+#           cpu: "100m"
+#           memory: "128Mi"
+#         limits:
+#           cpu: "500m"
+#           memory: "512Mi"
+#       livenessProbe:
+#         enabled: true
+#         path: "/"
+#         initialDelaySeconds: 10
+#         periodSeconds: 10
+#       readinessProbe:
+#         enabled: false
+#         path: "/"
+#         initialDelaySeconds: 5
+#         periodSeconds: 5
+#       envFromSecret: null
+#       env: []
+#       service:
+#         enabled: true
+#         type: ClusterIP
+#         port: 80
+#       ingress:
+#         enabled: true
+#         host: "example.com"
+#         path: "/"                    # default: "/"
+#         pathType: Prefix             # default: "Prefix"
+#         tls:                         # TLS is enabled by default
+#           enabled: false             # set to false to disable TLS
+#           secretName: ""             # auto-generated if empty
+#           issuer: "letsencrypt"      # default: "letsencrypt"
+#         wwwRedirect: false
+#         basicAuth:
+#           enabled: false
+#           username: ""
+#           password: ""
+#         fcgi:
+#           enabled: false
+#           scriptFilename: ""
+#         proxyBodySize: ""
+#         whitelistSourceRange: ""
+#         securityPathFilter:
+#           enabled: false
+#           blockedPaths:
+#             - "/.git"
+#             - "/.env"
+#             - "/.claude"
+#       pdb:
+#         enabled: false
+#         minAvailable: 1
+#       initContainers: []
+#       additionalContainers: []
+#
+#     worker:
+#       enabled: true
+#       image: "myapp-worker:latest"
+#       replicas: 5
+#       command: "php artisan queue:work"
+
+components: {}
+
+# =============================================================================
+# JOBS
+# =============================================================================
+# One-time jobs defined at chart level
+#
+# Example:
+#   jobs:
+#     - name: db-migrate
+#       image: "myapp-web:latest"
+#       command: "php artisan migrate --force"
+#       envFromSecret: null
+#       env: []
+#       restartPolicy: Never
+#       backoffLimit: 3
+#       resources:
+#         requests:
+#           cpu: "100m"
+#           memory: "128Mi"
+
+jobs: []
+
+# =============================================================================
+# CRONJOBS
+# =============================================================================
+# Scheduled jobs defined at chart level
+#
+# Example:
+#   cronJobs:
+#     - name: cleanup
+#       schedule: "0 2 * * *"
+#       image: "myapp-worker:latest"
+#       command: "php artisan cleanup"
+#       envFromSecret: null
+#       env: []
+#       restartPolicy: OnFailure
+#       backoffLimit: 3
+#       concurrencyPolicy: Forbid
+#       resources:
+#         requests:
+#           cpu: "50m"
+#           memory: "64Mi"
+
+cronJobs: []

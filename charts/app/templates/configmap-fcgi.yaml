@@ -1,0 +1,22 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.ingress }}
+{{- if $component.ingress.fcgi }}
+{{- if $component.ingress.fcgi.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-fcgi-cm
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+data:
+  SCRIPT_FILENAME: {{ required (printf "components.%s.ingress.fcgi.scriptFilename is required when fcgi is enabled" $componentName) $component.ingress.fcgi.scriptFilename | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

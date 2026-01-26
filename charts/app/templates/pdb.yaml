@@ -1,0 +1,29 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.pdb }}
+{{- if $component.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if $component.pdb.minAvailable }}
+  minAvailable: {{ $component.pdb.minAvailable }}
+  {{- else if $component.pdb.maxUnavailable }}
+  maxUnavailable: {{ $component.pdb.maxUnavailable }}
+  {{- else }}
+  minAvailable: 1
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "app.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 6 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
