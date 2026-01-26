@@ -43,12 +43,12 @@ components:
     image: "myapp:latest"
     replicas: 2
     containerPort: 80
-    service:
-      enabled: true
     ingress:
       enabled: true
       host: "app.example.com"
 ```
+
+> Service is auto-created when `containerPort` or `ingress.enabled` is defined.
 
 ### Full Example
 
@@ -92,8 +92,7 @@ components:
     env:
       - name: APP_ENV
         value: "production"
-    service:
-      enabled: true
+    service:                          # optional, auto-created
       type: ClusterIP
       port: 80
     ingress:
@@ -179,7 +178,7 @@ cronJobs:
 | `components.<name>.containerPort` | Container port | `80` |
 | `components.<name>.command` | Override command | `null` |
 | `components.<name>.resources` | Resource limits/requests | `{}` |
-| `components.<name>.service.enabled` | Create service | `false` |
+| `components.<name>.service.enabled` | Disable auto-created service | `auto` |
 | `components.<name>.ingress.enabled` | Create ingress | `false` |
 | `components.<name>.ingress.host` | Ingress hostname | required |
 | `components.<name>.ingress.tls.enabled` | Enable TLS | `true` |

@@ -6,8 +6,6 @@ components:
   web:
     image: "nginx:latest"
     containerPort: 80
-    service:
-      enabled: true
     ingress:
       enabled: true
       host: "minimal.example.com"

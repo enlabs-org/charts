@@ -30,8 +30,11 @@ global:
 # =============================================================================
 # COMPONENTS
 # =============================================================================
-# Each component creates one Deployment + optional Service + optional Ingress
+# Each component creates one Deployment + auto Service + optional Ingress
 # Key = component name (used in resource naming)
+#
+# Service is auto-created when containerPort or ingress.enabled is defined.
+# Use service.enabled: false to explicitly disable.
 #
 # Example:
 #   components:
@@ -63,8 +66,7 @@ global:
 #         periodSeconds: 5
 #       envFromSecret: null
 #       env: []
-#       service:
-#         enabled: true
+#       service:                       # auto-created, optional config
 #         type: ClusterIP
 #         port: 80
 #       ingress:

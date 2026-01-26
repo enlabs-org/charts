@@ -1,7 +1,15 @@
 {{- range $componentName, $component := .Values.components }}
 {{- if ne ($component.enabled | default true) false }}
+{{- /* Service is auto-created if containerPort or ingress.enabled is defined, unless service.enabled: false */}}
+{{- $serviceExplicitlyDisabled := false }}
 {{- if $component.service }}
-{{- if $component.service.enabled }}
+{{- if eq ($component.service.enabled | toString) "false" }}
+{{- $serviceExplicitlyDisabled = true }}
+{{- end }}
+{{- end }}
+{{- $hasContainerPort := $component.containerPort }}
+{{- $hasIngress := ($component.ingress).enabled }}
+{{- if and (not $serviceExplicitlyDisabled) (or $hasContainerPort $hasIngress) }}
 ---
 apiVersion: v1
 kind: Service
@@ -13,9 +21,9 @@ metadata:
     {{- . | nindent 4 }}
     {{- end }}
 spec:
-  type: {{ $component.service.type | default "ClusterIP" }}
+  type: {{ ($component.service).type | default "ClusterIP" }}
   ports:
-    - port: {{ $component.service.port | default $component.containerPort }}
+    - port: {{ ($component.service).port | default $component.containerPort }}
       targetPort: http
       protocol: TCP
       name: http
@@ -29,7 +37,6 @@ spec:
     {{- end }}
   selector:
     {{- include "app.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
