@@ -5,6 +5,12 @@
 # These settings apply to all components unless overridden
 
 global:
+  # Default image for all components (can be overridden per component)
+  image: null
+
+  # Default host for ingress (can be overridden per component)
+  host: null
+
   # Image pull policy for all containers
   imagePullPolicy: Always
 

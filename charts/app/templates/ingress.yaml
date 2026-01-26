@@ -2,6 +2,7 @@
 {{- if ne ($component.enabled | default true) false }}
 {{- if $component.ingress }}
 {{- if $component.ingress.enabled }}
+{{- $ingressHost := $component.ingress.host | default $.Values.global.host }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -63,9 +64,9 @@ spec:
   {{- if $tlsEnabled }}
   tls:
     - hosts:
-        - {{ $component.ingress.host }}
+        - {{ $ingressHost }}
         {{- if $component.ingress.wwwRedirect }}
-        - www.{{ $component.ingress.host }}
+        - www.{{ $ingressHost }}
         {{- end }}
       {{- $customSecretName := "" }}
       {{- if $component.ingress.tls }}
@@ -78,7 +79,7 @@ spec:
       {{- end }}
   {{- end }}
   rules:
-    - host: {{ required (printf "components.%s.ingress.host is required" $componentName) $component.ingress.host }}
+    - host: {{ required (printf "components.%s.ingress.host or global.host is required" $componentName) $ingressHost }}
       http:
         paths:
           - path: {{ $component.ingress.path | default "/" }}

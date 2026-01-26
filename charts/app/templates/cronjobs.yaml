@@ -19,8 +19,9 @@ spec:
       template:
         spec:
           containers:
+            {{- $cronJobImage := .image | default $.Values.global.image }}
             - name: {{ .name }}
-              image: {{ required "cronJobs[].image is required" .image }}
+              image: {{ required "cronJobs[].image or global.image is required" $cronJobImage }}
               imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
               command: ['sh', '-c', {{ required "cronJobs[].command is required" .command | quote }}]
               {{- if .envFromSecret }}

@@ -15,8 +15,9 @@ spec:
   template:
     spec:
       containers:
+        {{- $jobImage := .image | default $.Values.global.image }}
         - name: {{ .name }}
-          image: {{ required "jobs[].image is required" .image }}
+          image: {{ required "jobs[].image or global.image is required" $jobImage }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
           command: ['sh', '-c', {{ required "jobs[].command is required" .command | quote }}]
           {{- if .envFromSecret }}

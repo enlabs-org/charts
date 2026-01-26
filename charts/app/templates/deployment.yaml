@@ -57,8 +57,10 @@ spec:
       {{- end }}
       containers:
         # Main container
+        {{- $componentImage := $component.image | default $.Values.global.image }}
+        {{- $componentHost := ($component.ingress).host | default $.Values.global.host }}
         - name: {{ $componentName }}
-          image: {{ required (printf "components.%s.image is required" $componentName) $component.image }}
+          image: {{ required (printf "components.%s.image or global.image is required" $componentName) $componentImage }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
           {{- if $component.command }}
           command: ['sh', '-c', {{ $component.command | quote }}]
@@ -76,7 +78,7 @@ spec:
           {{- end }}
           env:
             - name: IMAGE
-              value: {{ $component.image | quote }}
+              value: {{ $componentImage | quote }}
             {{- if $component.env }}
             {{- toYaml $component.env | nindent 12 }}
             {{- end }}
@@ -86,12 +88,10 @@ spec:
             httpGet:
               path: {{ $component.livenessProbe.path | default "/" }}
               port: http
-              {{- if $component.ingress }}
-              {{- if $component.ingress.host }}
+              {{- if $componentHost }}
               httpHeaders:
                 - name: Host
-                  value: {{ $component.ingress.host }}
-              {{- end }}
+                  value: {{ $componentHost }}
               {{- end }}
             initialDelaySeconds: {{ $component.livenessProbe.initialDelaySeconds | default 10 }}
             periodSeconds: {{ $component.livenessProbe.periodSeconds | default 10 }}
@@ -103,12 +103,10 @@ spec:
             httpGet:
               path: {{ $component.readinessProbe.path | default "/" }}
               port: http
-              {{- if $component.ingress }}
-              {{- if $component.ingress.host }}
+              {{- if $componentHost }}
               httpHeaders:
                 - name: Host
-                  value: {{ $component.ingress.host }}
-              {{- end }}
+                  value: {{ $componentHost }}
               {{- end }}
             initialDelaySeconds: {{ $component.readinessProbe.initialDelaySeconds | default 5 }}
             periodSeconds: {{ $component.readinessProbe.periodSeconds | default 5 }}
