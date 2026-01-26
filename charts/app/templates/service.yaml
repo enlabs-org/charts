@@ -1,0 +1,32 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.service }}
+{{- if $component.service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+spec:
+  type: {{ $component.service.type | default "ClusterIP" }}
+  ports:
+    - port: {{ $component.service.port | default $component.containerPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    {{- range $component.additionalContainers }}
+    {{- if .port }}
+    - port: {{ .port }}
+      targetPort: {{ .name }}-port
+      protocol: TCP
+      name: {{ .name }}-port
+    {{- end }}
+    {{- end }}
+  selector:
+    {{- include "app.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

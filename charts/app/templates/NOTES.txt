@@ -1,0 +1,43 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named: {{ .Release.Name }}
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+
+Component: {{ $componentName }}
+  Deployment: {{ $.Release.Name }}-{{ $componentName }}
+  Replicas: {{ $component.replicas | default 1 }}
+  {{- if $component.service }}
+  {{- if $component.service.enabled }}
+  Service: {{ $.Release.Name }}-{{ $componentName }}
+  {{- end }}
+  {{- end }}
+  {{- if $component.ingress }}
+  {{- if $component.ingress.enabled }}
+  {{- if $component.ingress.tls }}
+  {{- if $component.ingress.tls.enabled }}
+  URL: https://{{ $component.ingress.host }}
+  {{- else }}
+  URL: http://{{ $component.ingress.host }}
+  {{- end }}
+  {{- else }}
+  URL: http://{{ $component.ingress.host }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.jobs }}
+
+Jobs:
+{{- range .Values.jobs }}
+  - {{ .name }}
+{{- end }}
+{{- end }}
+{{- if .Values.cronJobs }}
+
+CronJobs:
+{{- range .Values.cronJobs }}
+  - {{ .name }} ({{ .schedule }})
+{{- end }}
+{{- end }}

@@ -1,0 +1,156 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+spec:
+  replicas: {{ $component.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "app.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if $.Values.global.restartAfterRedeploy }}
+        rollme: {{ randAlphaNum 5 | quote }}
+        {{- end }}
+      labels:
+        {{- include "app.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 8 }}
+    spec:
+      {{- if $component.initContainers }}
+      initContainers:
+        {{- range $component.initContainers }}
+        - name: {{ .name }}
+          image: {{ required "initContainer.image is required" .image }}
+          imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
+          {{- if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+          {{- end }}
+          {{- if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+          {{- end }}
+          {{- if .env }}
+          env:
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      containers:
+        # Main container
+        - name: {{ $componentName }}
+          image: {{ required (printf "components.%s.image is required" $componentName) $component.image }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          {{- if $component.command }}
+          command: ['sh', '-c', {{ $component.command | quote }}]
+          {{- end }}
+          {{- if $component.containerPort }}
+          ports:
+            - name: http
+              containerPort: {{ $component.containerPort }}
+              protocol: TCP
+          {{- end }}
+          {{- with include "app.envFromSecret" (dict "component" $component "global" $.Values.global) }}
+          envFrom:
+            - secretRef:
+                name: {{ . }}
+          {{- end }}
+          env:
+            - name: IMAGE
+              value: {{ $component.image | quote }}
+            {{- if $component.env }}
+            {{- toYaml $component.env | nindent 12 }}
+            {{- end }}
+          {{- if $component.livenessProbe }}
+          {{- if ne ($component.livenessProbe.enabled | default true) false }}
+          livenessProbe:
+            httpGet:
+              path: {{ $component.livenessProbe.path | default "/" }}
+              port: http
+              {{- if $component.ingress }}
+              {{- if $component.ingress.host }}
+              httpHeaders:
+                - name: Host
+                  value: {{ $component.ingress.host }}
+              {{- end }}
+              {{- end }}
+            initialDelaySeconds: {{ $component.livenessProbe.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ $component.livenessProbe.periodSeconds | default 10 }}
+          {{- end }}
+          {{- end }}
+          {{- if $component.readinessProbe }}
+          {{- if $component.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ $component.readinessProbe.path | default "/" }}
+              port: http
+              {{- if $component.ingress }}
+              {{- if $component.ingress.host }}
+              httpHeaders:
+                - name: Host
+                  value: {{ $component.ingress.host }}
+              {{- end }}
+              {{- end }}
+            initialDelaySeconds: {{ $component.readinessProbe.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ $component.readinessProbe.periodSeconds | default 5 }}
+          {{- end }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+          {{- if $component.resources }}
+          resources:
+            {{- toYaml $component.resources | nindent 12 }}
+          {{- end }}
+        {{- /* Additional containers (sidecars) */}}
+        {{- range $component.additionalContainers }}
+        - name: {{ .name }}
+          image: {{ required "additionalContainer.image is required" .image }}
+          imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
+          {{- if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+          {{- end }}
+          {{- if .port }}
+          ports:
+            - name: {{ .name }}-port
+              containerPort: {{ .port }}
+              protocol: TCP
+          {{- end }}
+          {{- if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+          {{- end }}
+          {{- if .env }}
+          env:
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- if $.Values.global.useDatabaseCert }}
+      volumes:
+        {{- include "app.databaseCertVolume" $.Values.global | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}

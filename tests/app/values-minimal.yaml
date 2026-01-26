@@ -1,0 +1,15 @@
+---
+# Minimal test values for app chart
+
+components:
+  web:
+    image: "nginx:latest"
+    containerPort: 80
+    service:
+      enabled: true
+    ingress:
+      enabled: true
+      host: "minimal.example.com"
+      tls:
+        enabled: true
+        issuer: "letsencrypt"

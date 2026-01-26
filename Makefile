@@ -6,6 +6,14 @@ template-stable-app:
 	rm -rf .build/stable-app
 	helm template test-stable-app charts/stable-app --output-dir=.build --set image=my-stable-app-image --set host=stable-app.example.com -f tests/preview-app/values.yaml --debug
 
+template-app:
+	rm -rf .build/app
+	helm template test-app charts/app --output-dir=.build -f tests/app/values-full.yaml --debug
+
+template-app-minimal:
+	rm -rf .build/app
+	helm template test-app-minimal charts/app --output-dir=.build -f tests/app/values-minimal.yaml --debug
+
 template-metabase:
 	rm -rf .build/metabase
 	helm template test-metabase charts/metabase --output-dir=.build --debug
@@ -25,6 +33,7 @@ template-rbac:
 helm-template:
 	make template-preview-app
 	make template-stable-app
+	make template-app
 	make template-metabase
 	make template-adminer
 	make template-rbac
@@ -32,6 +41,7 @@ helm-template:
 helm-lint:
 	helm lint charts/preview-app
 	helm lint charts/stable-app
+	helm lint charts/app
 	helm lint charts/metabase
 	helm lint charts/adminer
 	helm lint charts/rbac
