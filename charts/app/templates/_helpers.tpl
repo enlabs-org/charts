@@ -83,6 +83,25 @@ Usage: {{ include "app.envFromSecret" (dict "component" $component "global" $.Va
 {{- end }}
 
 {{/*
+Custom labels - merges global.labels with component.labels
+Usage: {{ include "app.customLabels" (dict "global" $.Values.global "component" $component) | nindent 4 }}
+*/}}
+{{- define "app.customLabels" -}}
+{{- $labels := dict }}
+{{- if .global.labels }}
+{{- $labels = merge $labels .global.labels }}
+{{- end }}
+{{- if .component }}
+{{- if .component.labels }}
+{{- $labels = merge $labels .component.labels }}
+{{- end }}
+{{- end }}
+{{- if $labels }}
+{{- toYaml $labels }}
+{{- end }}
+{{- end }}
+
+{{/*
 Database cert volume mount
 Usage: {{ include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
 */}}

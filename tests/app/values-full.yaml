@@ -9,6 +9,9 @@ global:
     mountPath: "/etc/ssl/certs"
     secretName: "database-cert"
   restartAfterRedeploy: true
+  labels:
+    app.example.com/environment: "staging"
+    app.example.com/team: "platform"
 
 components:
   web:
@@ -16,6 +19,9 @@ components:
     image: "myapp-web:v1.0.0"
     replicas: 3
     containerPort: 80
+    labels:
+      app.example.com/scaling: "enabled"
+      app.example.com/shutdown-outside-hours: "true"
     resources:
       requests:
         cpu: "100m"
@@ -84,6 +90,8 @@ components:
     image: "myapp-worker:v1.0.0"
     replicas: 5
     command: "php artisan queue:work --queue=high,default"
+    labels:
+      app.example.com/scaling: "aggressive"
     resources:
       requests:
         cpu: "200m"

@@ -7,6 +7,9 @@ metadata:
   labels:
     {{- include "app.labels" $ | nindent 4 }}
     app.kubernetes.io/component: job-{{ .name }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global) }}
+    {{- . | nindent 4 }}
+    {{- end }}
 spec:
   backoffLimit: {{ .backoffLimit | default 3 }}
   template:

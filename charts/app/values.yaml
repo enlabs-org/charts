@@ -8,6 +8,13 @@ global:
   # Image pull policy for all containers
   imagePullPolicy: Always
 
+  # Custom labels applied to all resources
+  # Example:
+  #   labels:
+  #     app.example.com/environment: "staging"
+  #     app.example.com/team: "platform"
+  labels: {}
+
   # Default environment secret (can be overridden per component)
   envFromSecret: null
 
@@ -34,6 +41,9 @@ global:
 #       replicas: 2
 #       containerPort: 80
 #       command: null
+#       labels:
+#         app.example.com/scaling: "enabled"
+#         app.example.com/shutdown-outside-hours: "true"
 #       resources:
 #         requests:
 #           cpu: "100m"

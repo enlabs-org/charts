@@ -7,6 +7,9 @@ metadata:
   labels:
     {{- include "app.labels" $ | nindent 4 }}
     app.kubernetes.io/component: cronjob-{{ .name }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global) }}
+    {{- . | nindent 4 }}
+    {{- end }}
 spec:
   schedule: {{ required "cronJobs[].schedule is required" .schedule | quote }}
   concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" }}

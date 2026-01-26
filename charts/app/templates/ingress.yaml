@@ -9,6 +9,9 @@ metadata:
   name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
   labels:
     {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
   annotations:
     {{- if $component.ingress.wwwRedirect }}
     nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
