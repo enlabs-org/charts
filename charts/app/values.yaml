@@ -70,12 +70,12 @@ global:
 #       ingress:
 #         enabled: true
 #         host: "example.com"
-#         path: "/"
-#         pathType: Prefix
-#         tls:
-#           enabled: true
-#           secretName: ""
-#           issuer: "letsencrypt"
+#         path: "/"                    # default: "/"
+#         pathType: Prefix             # default: "Prefix"
+#         tls:                         # TLS is enabled by default
+#           enabled: false             # set to false to disable TLS
+#           secretName: ""             # auto-generated if empty
+#           issuer: "letsencrypt"      # default: "letsencrypt"
 #         wwwRedirect: false
 #         basicAuth:
 #           enabled: false

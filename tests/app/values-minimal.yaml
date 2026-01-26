@@ -1,5 +1,6 @@
 ---
 # Minimal test values for app chart
+# TLS with letsencrypt is enabled by default
 
 components:
   web:
@@ -10,6 +11,3 @@ components:
     ingress:
       enabled: true
       host: "minimal.example.com"
-      tls:
-        enabled: true
-        issuer: "letsencrypt"

@@ -16,10 +16,14 @@ metadata:
     {{- if $component.ingress.wwwRedirect }}
     nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     {{- end }}
+    {{- $tlsEnabled := true }}
     {{- if $component.ingress.tls }}
-    {{- if and $component.ingress.tls.enabled $component.ingress.tls.issuer }}
-    cert-manager.io/cluster-issuer: {{ $component.ingress.tls.issuer }}
+    {{- if kindIs "bool" $component.ingress.tls.enabled }}
+    {{- $tlsEnabled = $component.ingress.tls.enabled }}
     {{- end }}
+    {{- end }}
+    {{- if $tlsEnabled }}
+    cert-manager.io/cluster-issuer: {{ ($component.ingress.tls).issuer | default "letsencrypt" }}
     {{- end }}
     {{- if $component.ingress.basicAuth }}
     {{- if $component.ingress.basicAuth.enabled }}
@@ -56,20 +60,22 @@ metadata:
     {{- end }}
 spec:
   ingressClassName: nginx
-  {{- if $component.ingress.tls }}
-  {{- if $component.ingress.tls.enabled }}
+  {{- if $tlsEnabled }}
   tls:
     - hosts:
         - {{ $component.ingress.host }}
         {{- if $component.ingress.wwwRedirect }}
         - www.{{ $component.ingress.host }}
         {{- end }}
-      {{- if $component.ingress.tls.secretName }}
-      secretName: {{ $component.ingress.tls.secretName }}
+      {{- $customSecretName := "" }}
+      {{- if $component.ingress.tls }}
+      {{- $customSecretName = $component.ingress.tls.secretName }}
+      {{- end }}
+      {{- if $customSecretName }}
+      secretName: {{ $customSecretName }}
       {{- else }}
       secretName: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-tls
       {{- end }}
-  {{- end }}
   {{- end }}
   rules:
     - host: {{ required (printf "components.%s.ingress.host is required" $componentName) $component.ingress.host }}
