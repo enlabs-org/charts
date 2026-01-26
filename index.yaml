@@ -9,6 +9,16 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/adminer-1.0.0/adminer-1.0.0.tgz
     version: 1.0.0
+  app:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-26T13:33:54.97816508Z"
+    description: Helm Chart for multi-component application deployments
+    digest: ae896ac685323e3e094c71aa710dc863a730fb84fd93dc85bd10f2c42d31cf9e
+    name: app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/app-1.0.0/app-1.0.0.tgz
+    version: 1.0.0
   metabase:
   - apiVersion: v1
     created: "2024-01-02T12:40:02.178748728Z"
@@ -350,4 +360,4 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
     version: 1.0.0-rc
-generated: "2025-11-24T13:21:23.167432861Z"
+generated: "2026-01-26T13:33:54.978258965Z"
