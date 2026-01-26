@@ -35,25 +35,27 @@ Multi-component application chart supporting multiple deployments, services, and
 
 ```yaml
 global:
-  imagePullPolicy: Always
+  image: "myapp:latest"
+  host: "app.example.com"
   envFromSecret: my-app-secrets
 
 components:
   web:
-    image: "myapp:latest"
     replicas: 2
     containerPort: 80
     ingress:
       enabled: true
-      host: "app.example.com"
 ```
 
-> Service is auto-created when `containerPort` or `ingress.enabled` is defined.
+> **Note:** Service is auto-created when `containerPort` or `ingress.enabled` is defined.
+> Components inherit `global.image` and `global.host` unless overridden.
 
 ### Full Example
 
 ```yaml
 global:
+  image: "myapp:v1.0.0"               # default image for all components
+  host: "app.example.com"             # default host for ingress
   imagePullPolicy: Always
   envFromSecret: my-app-secrets
   useDatabaseCert: true
@@ -66,10 +68,8 @@ global:
 
 components:
   web:
-    image: "myapp-web:v1.0.0"
     replicas: 3
     containerPort: 80
-    command: null
     labels:
       app.example.com/scaling: "enabled"
     resources:
@@ -82,36 +82,22 @@ components:
     livenessProbe:
       enabled: true
       path: "/health"
-      initialDelaySeconds: 10
-      periodSeconds: 10
     readinessProbe:
       enabled: true
       path: "/ready"
-      initialDelaySeconds: 5
-      periodSeconds: 5
     env:
       - name: APP_ENV
         value: "production"
-    service:                          # optional, auto-created
+    service:                          # optional config, auto-created
       type: ClusterIP
       port: 80
     ingress:
       enabled: true
-      host: "app.example.com"
-      path: "/"
-      pathType: Prefix
+      # host: uses global.host
       tls:
         enabled: true
-        secretName: ""  # auto-generated
         issuer: "letsencrypt"
       wwwRedirect: true
-      basicAuth:
-        enabled: false
-        username: ""
-        password: ""
-      fcgi:
-        enabled: false
-        scriptFilename: ""
       proxyBodySize: "50m"
       whitelistSourceRange: "10.0.0.0/8"
       securityPathFilter:
@@ -122,14 +108,9 @@ components:
     pdb:
       enabled: true
       minAvailable: 1
-    initContainers:
-      - name: wait-for-db
-        image: busybox
-        command: ["sh", "-c", "until nc -z db 5432; do sleep 1; done"]
-    additionalContainers: []
 
   worker:
-    image: "myapp-worker:v1.0.0"
+    # image: uses global.image
     replicas: 5
     command: "php artisan queue:work"
     resources:
@@ -137,53 +118,52 @@ components:
         cpu: "200m"
         memory: "256Mi"
 
+  api:
+    image: "myapp-api:v2.0.0"         # override global.image
+    containerPort: 8080
+    ingress:
+      enabled: true
+      host: "api.example.com"         # override global.host
+
 jobs:
   - name: db-migrate
-    image: "myapp-web:v1.0.0"
+    # image: uses global.image
     command: "php artisan migrate --force"
-    envFromSecret: my-app-secrets
-    restartPolicy: Never
-    backoffLimit: 3
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "128Mi"
 
 cronJobs:
   - name: cleanup
     schedule: "0 2 * * *"
-    image: "myapp-worker:v1.0.0"
+    # image: uses global.image
     command: "php artisan cleanup"
-    envFromSecret: my-app-secrets
-    restartPolicy: OnFailure
-    backoffLimit: 3
-    concurrencyPolicy: Forbid
-    resources:
-      requests:
-        cpu: "50m"
-        memory: "64Mi"
 ```
 
 ### Values Reference
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
+| `global.image` | Default image for all components/jobs | `null` |
+| `global.host` | Default host for ingress | `null` |
 | `global.imagePullPolicy` | Image pull policy | `Always` |
 | `global.envFromSecret` | Secret for environment variables | `null` |
 | `global.useDatabaseCert` | Mount database certificate | `false` |
 | `global.restartAfterRedeploy` | Force pod restart on deploy | `false` |
 | `global.labels` | Labels for all resources | `{}` |
-| `components.<name>.image` | Container image | required |
+| `components.<name>.image` | Container image | `global.image` |
 | `components.<name>.replicas` | Number of replicas | `1` |
-| `components.<name>.containerPort` | Container port | `80` |
+| `components.<name>.containerPort` | Container port | - |
 | `components.<name>.command` | Override command | `null` |
 | `components.<name>.resources` | Resource limits/requests | `{}` |
 | `components.<name>.service.enabled` | Disable auto-created service | `auto` |
 | `components.<name>.ingress.enabled` | Create ingress | `false` |
-| `components.<name>.ingress.host` | Ingress hostname | required |
+| `components.<name>.ingress.host` | Ingress hostname | `global.host` |
 | `components.<name>.ingress.tls.enabled` | Enable TLS | `true` |
 | `components.<name>.ingress.whitelistSourceRange` | IP whitelist | `""` |
 | `components.<name>.pdb.enabled` | Create PodDisruptionBudget | `false` |
+| `jobs[].image` | Job container image | `global.image` |
+| `jobs[].command` | Job command | required |
+| `cronJobs[].image` | CronJob container image | `global.image` |
+| `cronJobs[].schedule` | Cron schedule | required |
+| `cronJobs[].command` | CronJob command | required |
 
 ---
 
