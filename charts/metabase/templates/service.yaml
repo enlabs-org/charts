@@ -1,13 +1,43 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- /* Service is auto-created if containerPort or ingress.enabled is defined, unless service.enabled: false */}}
+{{- $serviceExplicitlyDisabled := false }}
+{{- if $component.service }}
+{{- if eq ($component.service.enabled | toString) "false" }}
+{{- $serviceExplicitlyDisabled = true }}
+{{- end }}
+{{- end }}
+{{- $hasContainerPort := $component.containerPort }}
+{{- $hasIngress := ($component.ingress).enabled }}
+{{- if and (not $serviceExplicitlyDisabled) (or $hasContainerPort $hasIngress) }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    environment: {{ .Release.Name }}
+    {{- include "metabase.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "metabase.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
 spec:
-  selector:
-    app: {{ .Release.Name }}
+  type: {{ ($component.service).type | default "ClusterIP" }}
   ports:
-    - port: 3000
-      name: app
+    - port: {{ ($component.service).port | default $component.containerPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    {{- range $component.additionalContainers }}
+    {{- if .port }}
+    - port: {{ .port }}
+      targetPort: {{ .name }}-port
+      protocol: TCP
+      name: {{ .name }}-port
+    {{- end }}
+    {{- end }}
+  selector:
+    {{- include "metabase.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

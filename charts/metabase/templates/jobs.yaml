@@ -1,0 +1,46 @@
+{{- range .Values.jobs }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}-{{ randAlphaNum 5 | lower }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "metabase.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: job-{{ .name }}
+    {{- with include "metabase.customLabels" (dict "global" $.Values.global) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: {{ .backoffLimit | default 3 }}
+  template:
+    spec:
+      containers:
+        {{- $jobImage := .image | default $.Values.global.image }}
+        - name: {{ .name }}
+          image: {{ required "jobs[].image or global.image is required" $jobImage }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          command: ['sh', '-c', {{ required "jobs[].command is required" .command | quote }}]
+          {{- if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+          {{- end }}
+          {{- if .env }}
+          env:
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "metabase.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+      restartPolicy: {{ .restartPolicy | default "Never" }}
+      {{- if $.Values.global.useDatabaseCert }}
+      volumes:
+        {{- include "metabase.databaseCertVolume" $.Values.global | nindent 8 }}
+      {{- end }}
+{{- end }}
