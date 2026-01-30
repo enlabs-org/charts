@@ -1,16 +1,163 @@
 ---
-# Deployment
-image: 'docker.n8n.io/n8nio/n8n'
-replicas: 1
-imagePullPolicy: 'Always'
-envFromSecret: null
+# =============================================================================
+# N8N CHART CONFIGURATION
+# =============================================================================
+# This chart provides a standardized way to deploy n8n workflow automation
+# with modern Kubernetes best practices.
 
-# Ingress
+# =============================================================================
+# DEPLOYMENT CONFIGURATION
+# =============================================================================
+
+# Deprecated: Use image.repository and image.tag instead
+image: 'docker.n8n.io/n8nio/n8n'
+
+# Modern image configuration
+# image:
+#   repository: docker.n8n.io/n8nio/n8n
+#   pullPolicy: Always
+#   tag: ""  # Overrides the image tag whose default is the chart appVersion
+
+# imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Deployment settings
+replicas: 1
+imagePullPolicy: 'Always'  # Deprecated: Use image.pullPolicy
+containerPort: 5678
+restartAfterRedeploy: false
+
+# Environment configuration
+envFromSecret: null
+env: []
+# env:
+#   - name: N8N_BASIC_AUTH_ACTIVE
+#     value: "true"
+#   - name: N8N_BASIC_AUTH_USER
+#     value: "user"
+
+# =============================================================================
+# SERVICE ACCOUNT
+# =============================================================================
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# =============================================================================
+# SECURITY CONTEXT
+# =============================================================================
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# =============================================================================
+# SERVICE CONFIGURATION
+# =============================================================================
+
+service:
+  type: ClusterIP
+  port: 5678
+
+# =============================================================================
+# INGRESS CONFIGURATION
+# =============================================================================
+
 ingress:
   enabled: false
+  className: "nginx"
+  annotations: {}
+    # For Kubernetes <1.18 or legacy ingress controllers, you may need:
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
   host: ''
-  tls: true
-  issueCertificate: true
-  clusterIssuer: 'letsencrypt'
-  tlsSecretName: ''
-  whitelistSourceRange: null # Allow all IPs, adjust as necessary
+  path: /
+  pathType: Prefix
+  
+  # TLS configuration
+  tls:
+    enabled: true
+    secretName: ''
+    issuer: 'letsencrypt'
+  
+  # Security configurations
+  whitelistSourceRange: null  # e.g., "10.0.0.0/8,192.168.0.0/16"
+  proxyBodySize: ""  # e.g., "100m"
+  
+  # Security path filter
+  securityPathFilter:
+    enabled: false
+    blockedPaths:
+      - "/.git"
+      - "/.env"
+      - "/.hg"
+
+# =============================================================================
+# HEALTH CHECKS
+# =============================================================================
+
+livenessProbe:
+  enabled: true
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  path: /
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# =============================================================================
+# RESOURCES
+# =============================================================================
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# =============================================================================
+# POD DISRUPTION BUDGET
+# =============================================================================
+
+pdb:
+  enabled: false
+  # Specify either minAvailable or maxUnavailable (not both)
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# =============================================================================
+# NODE SELECTION
+# =============================================================================
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
