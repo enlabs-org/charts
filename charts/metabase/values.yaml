@@ -1,22 +1,141 @@
 ---
-# Deployment
-image: 'metabase/metabase:latest'
-replicas: 1
-imagePullPolicy: 'Always'
-database:
-  type: 'h2'
-  host: ''
-  port: ''
-  name: ''
-  user: ''
-  password: ''
+# =============================================================================
+# GLOBAL SETTINGS
+# =============================================================================
+# These settings apply to all components unless overridden
 
+global:
+  # Default image for Metabase
+  image: "metabase/metabase:v0.49.0"
+  
+  # Default host for ingress
+  host: null
+  
+  # Image pull policy
+  imagePullPolicy: Always
+  
+  # Custom labels applied to all resources
+  labels: {}
+  
+  # Environment secret for database credentials (recommended)
+  envFromSecret: null
+  
+  # Database certificate configuration
+  useDatabaseCert: false
+  databaseCert:
+    mountPath: "/etc/ssl/certs"
+    secretName: "database-cert"
 
-# Ingress
-ingress:
-  enabled: false
-  host: ''
-  tls: true
-  issueCertificate: true
-  clusterIssuer: 'letsencrypt'
-  tlsSecretName: ''
+# =============================================================================
+# COMPONENTS
+# =============================================================================
+# Metabase deployment component
+
+components:
+  metabase:
+    enabled: true
+    
+    # Override global image if needed
+    # image: "metabase/metabase:custom-version"
+    
+    replicas: 1
+    
+    # Container port for Metabase
+    containerPort: 3000
+    
+    # Resource limits and requests
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+    
+    # Environment variables for database configuration
+    # For security, consider using envFromSecret instead of direct values
+    env:
+      - name: MB_DB_TYPE
+        value: "h2"
+      # Example for external database (use envFromSecret for credentials):
+      # - name: MB_DB_TYPE
+      #   value: "postgres"
+      # - name: MB_DB_HOST
+      #   value: "postgres.example.com"
+      # - name: MB_DB_PORT
+      #   value: "5432"
+      # - name: MB_DB_DBNAME
+      #   value: "metabase"
+      # Database credentials should be provided via envFromSecret
+    
+    # Service configuration (auto-created due to containerPort)
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 3000
+    
+    # Ingress configuration
+    ingress:
+      enabled: false
+      
+      # host: uses global.host if not specified
+      host: null
+      
+      # TLS configuration
+      tls: true
+      issueCertificate: true
+      clusterIssuer: "letsencrypt"
+      tlsSecretName: null  # auto-generated if not specified
+      
+      # Security features
+      whitelistSourceRange: null  # e.g., "10.0.0.0/8" for VPN restriction
+      securityPathFilter:
+        enabled: true
+        blockedPaths: ["/.git", "/.env", "/admin", "/api/internal"]
+    
+    # Pod Disruption Budget
+    pdb:
+      enabled: true
+      minAvailable: 1
+    
+    # Health checks
+    livenessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    
+    readinessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+# =============================================================================
+# JOBS
+# =============================================================================
+# Optional initialization jobs
+
+jobs: []
+# Example:
+# - name: setup
+#   image: "metabase/metabase:v0.49.0"
+#   command: "java -jar metabase.jar setup"
+
+# =============================================================================
+# CRON JOBS  
+# =============================================================================
+# Optional maintenance cron jobs
+
+cronJobs: []
+# Example:
+# - name: cleanup
+#   schedule: "0 2 * * *"
+#   image: "metabase/metabase:v0.49.0"
+#   command: "java -jar metabase.jar cleanup"

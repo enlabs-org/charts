@@ -1,5 +1,6 @@
 ---
-apiVersion: v1
-description: Helm Chart for install Metabase
+apiVersion: v2
+description: Helm Chart for Metabase business intelligence tool
 name: metabase
-version: 1.0.2
+version: 1.1.0
+appVersion: "v0.49.0"

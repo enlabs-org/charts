@@ -1,0 +1,93 @@
+---
+# Test values for Metabase chart with full features enabled
+
+global:
+  image: "metabase/metabase:v0.49.0"
+  host: "metabase.example.com"
+  imagePullPolicy: Always
+  labels:
+    environment: "test"
+    team: "data"
+  envFromSecret: "metabase-secrets"
+  useDatabaseCert: false
+
+components:
+  metabase:
+    enabled: true
+    replicas: 2
+    containerPort: 3000
+    
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+    
+    # Environment variables (for H2 database)
+    env:
+      - name: MB_DB_TYPE
+        value: "h2"
+      - name: JAVA_OPTS
+        value: "-Xmx1g"
+    
+    # Service configuration
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 3000
+    
+    # Ingress configuration with security features
+    ingress:
+      enabled: true
+      host: "metabase.example.com"
+      tls: true
+      issueCertificate: true
+      clusterIssuer: "letsencrypt"
+      tlsSecretName: null
+      
+      # Security features
+      whitelistSourceRange: "10.0.0.0/8"
+      securityPathFilter:
+        enabled: true
+        blockedPaths: ["/.git", "/.env", "/admin", "/api/internal"]
+      proxyBodySize: "50m"
+    
+    # Pod Disruption Budget
+    pdb:
+      enabled: true
+      minAvailable: 1
+    
+    # Health checks
+    livenessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    
+    readinessProbe:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+# Optional initialization job example (commented out)
+jobs: []
+# - name: setup
+#   image: "metabase/metabase:v0.49.0"
+#   command: "echo 'Metabase setup complete'"
+#   backoffLimit: 1
+
+# Optional maintenance cron jobs
+cronJobs: []
+# - name: backup
+#   schedule: "0 2 * * *"
+#   image: "metabase/metabase:v0.49.0"
+#   command: "echo 'Backup process'"
