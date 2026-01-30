@@ -15,9 +15,9 @@ make helm-lint
 # Generate manifests for all charts (outputs to .build/)
 make helm-template
 
-# Generate manifests for a specific chart
-make template-app
-make template-app-minimal
+# Generate manifests for a specific chart (outputs to .build/<chart-name>/)
+make template-app          # uses tests/app/values-full.yaml
+make template-app-minimal  # uses tests/app/values-minimal.yaml
 make template-preview-app
 make template-stable-app
 make template-metabase
@@ -39,6 +39,21 @@ The CI pipeline (`helm-dry-run.yml`) runs:
 
 All checks must pass before merging.
 
+## Claude Code Integration
+
+The `claude-code.yml` workflow enables AI-assisted issue resolution:
+
+**Triggers:**
+- Issue opened/labeled with `claude` label
+- Comment on issue starting with `@claude`
+
+**Usage:**
+1. Create issue with `claude` label describing the change needed
+2. Claude Code analyzes the issue and creates a PR with the solution
+3. Use `@claude` in comments for follow-up requests
+
+**Required secret:** `ANTHROPIC_API_KEY`
+
 ## Charts
 
 | Chart | Purpose |
@@ -57,31 +72,34 @@ The `app` chart is the modern alternative to stable-app/preview-app with multi-c
 
 **Key features:**
 - Multiple deployments per release via `components` map - each can be scaled independently
+- `global.image` and `global.host` as defaults - components inherit unless overridden
+- Auto-creates Service when `containerPort` or `ingress.enabled` is defined
 - Resources limits/requests per component
 - PodDisruptionBudget per component
 - IP whitelist for VPN restriction (`whitelistSourceRange`)
 - Security path filter (blocks .git, .env, etc.)
-- Consistent naming and typing
+- ACME challenge paths (/.well-known/acme-challenge) bypass IP whitelist automatically
 
 **Structure:**
 ```yaml
 global:
+  image: "myapp:v1"           # default for all components/jobs
+  host: "app.example.com"     # default host for ingress
   imagePullPolicy: Always
   envFromSecret: app-secrets
   useDatabaseCert: false
 
 components:
   web:
-    image: "myapp-web:v1"
+    # image: uses global.image
     replicas: 2
     containerPort: 80
     resources:
       requests: {cpu: "100m", memory: "128Mi"}
-    service:
-      enabled: true
+    # service auto-created (containerPort defined)
     ingress:
       enabled: true
-      host: "app.example.com"
+      # host: uses global.host
       whitelistSourceRange: "10.0.0.0/8"
       securityPathFilter:
         enabled: true
@@ -90,19 +108,19 @@ components:
       enabled: true
       minAvailable: 1
   worker:
-    image: "myapp-worker:v1"
+    # image: uses global.image
     replicas: 5
     command: "php artisan queue:work"
 
 jobs:
   - name: migrate
-    image: "myapp-web:v1"
+    # image: uses global.image
     command: "php artisan migrate"
 
 cronJobs:
   - name: cleanup
     schedule: "0 2 * * *"
-    image: "myapp-worker:v1"
+    # image: uses global.image
     command: "php artisan cleanup"
 ```
 
@@ -126,6 +144,15 @@ Test values are in `tests/<chart-name>/` and are used by the Makefile template c
 - `tests/app/values-full.yaml` - comprehensive test with all features
 - `tests/app/values-minimal.yaml` - minimal working configuration
 
+## Template Helpers
+
+The `app` chart uses shared helpers in `charts/app/templates/_helpers.tpl`:
+- `app.componentFullname` - generates `{release}-{component}` names
+- `app.componentLabels` / `app.componentSelectorLabels` - standard Kubernetes labels
+- `app.envFromSecret` - component-level overrides global
+- `app.customLabels` - merges global.labels with component.labels
+- `app.databaseCertVolume` / `app.databaseCertVolumeMount` - database cert handling
+
 ## Versioning
 
-Chart versions are in each chart's `Chart.yaml`. Bump the version when making changes - releases are automatically created by the release workflow.
+Chart versions are in each chart's `Chart.yaml`. Bump the version when making changes - releases are automatically created via chart-releaser-action on push to main.
