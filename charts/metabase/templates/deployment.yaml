@@ -84,9 +84,8 @@ spec:
             {{- toYaml $component.env | nindent 12 }}
             {{- end }}
           {{- if $component.livenessProbe }}
-          {{- if ne ($component.livenessProbe.enabled | default true) false }}
+          {{- if and (ne ($component.livenessProbe.enabled | default true) false) $component.livenessProbe.httpGet }}
           livenessProbe:
-            {{- if $component.livenessProbe.httpGet }}
             httpGet:
               path: {{ $component.livenessProbe.httpGet.path | default "/" }}
               port: {{ $component.livenessProbe.httpGet.port | default "http" }}
@@ -95,7 +94,6 @@ spec:
                 - name: Host
                   value: {{ $componentHost }}
               {{- end }}
-            {{- end }}
             initialDelaySeconds: {{ $component.livenessProbe.initialDelaySeconds | default 10 }}
             periodSeconds: {{ $component.livenessProbe.periodSeconds | default 10 }}
             timeoutSeconds: {{ $component.livenessProbe.timeoutSeconds | default 5 }}
@@ -103,9 +101,8 @@ spec:
           {{- end }}
           {{- end }}
           {{- if $component.readinessProbe }}
-          {{- if ne ($component.readinessProbe.enabled | default true) false }}
+          {{- if and (ne ($component.readinessProbe.enabled | default true) false) $component.readinessProbe.httpGet }}
           readinessProbe:
-            {{- if $component.readinessProbe.httpGet }}
             httpGet:
               path: {{ $component.readinessProbe.httpGet.path | default "/" }}
               port: {{ $component.readinessProbe.httpGet.port | default "http" }}
@@ -114,7 +111,6 @@ spec:
                 - name: Host
                   value: {{ $componentHost }}
               {{- end }}
-            {{- end }}
             initialDelaySeconds: {{ $component.readinessProbe.initialDelaySeconds | default 5 }}
             periodSeconds: {{ $component.readinessProbe.periodSeconds | default 10 }}
             timeoutSeconds: {{ $component.readinessProbe.timeoutSeconds | default 5 }}
@@ -129,10 +125,10 @@ spec:
           volumeMounts:
             {{- include "metabase.databaseCertVolumeMount" $.Values.global | nindent 12 }}
           {{- end }}
-        {{- if $component.sideContainers }}
-        {{- range $component.sideContainers }}
+        {{- if $component.additionalContainers }}
+        {{- range $component.additionalContainers }}
         - name: {{ .name }}
-          image: {{ required "sideContainer.image is required" .image }}
+          image: {{ required "additionalContainer.image is required" .image }}
           imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
           {{- if .command }}
           command: ['sh', '-c', {{ .command | quote }}]

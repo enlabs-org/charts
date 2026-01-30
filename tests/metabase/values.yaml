@@ -51,7 +51,7 @@ components:
       whitelistSourceRange: "10.0.0.0/8"
       securityPathFilter:
         enabled: true
-        blockedPaths: ["/.git", "/.env", "/admin", "/api/internal"]
+        blockedPaths: ["/.git", "/.env"]
       proxyBodySize: "50m"
     
     # Pod Disruption Budget

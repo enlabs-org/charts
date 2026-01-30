@@ -19,7 +19,12 @@ spec:
   {{- else if $component.pdb.maxUnavailable }}
   maxUnavailable: {{ $component.pdb.maxUnavailable }}
   {{- else }}
+  {{- $replicas := $component.replicas | default 1 }}
+  {{- if eq (int $replicas) 1 }}
+  maxUnavailable: 1
+  {{- else }}
   minAvailable: 1
+  {{- end }}
   {{- end }}
   selector:
     matchLabels:

@@ -1,5 +1,20 @@
 ---
 # =============================================================================
+# BREAKING CHANGE NOTICE - VERSION 2.0.0
+# =============================================================================
+# This chart version introduces a breaking change from the previous flat
+# values structure to a modern component-based architecture. Existing
+# deployments using the old values format will need to migrate their
+# configuration to the new global/components structure shown below.
+#
+# Migration example:
+# OLD: image: "metabase/metabase:v0.49.0"
+# NEW: global.image: "metabase/metabase:v0.49.0"
+#
+# OLD: ingress.enabled: true
+# NEW: components.metabase.ingress.enabled: true
+
+# =============================================================================
 # GLOBAL SETTINGS
 # =============================================================================
 # These settings apply to all components unless overridden
@@ -91,11 +106,11 @@ components:
       whitelistSourceRange: null  # e.g., "10.0.0.0/8" for VPN restriction
       securityPathFilter:
         enabled: true
-        blockedPaths: ["/.git", "/.env", "/admin", "/api/internal"]
+        blockedPaths: ["/.git", "/.env"]
     
     # Pod Disruption Budget
     pdb:
-      enabled: true
+      enabled: false
       minAvailable: 1
     
     # Health checks
@@ -129,7 +144,7 @@ jobs: []
 #   command: "java -jar metabase.jar setup"
 
 # =============================================================================
-# CRON JOBS  
+# CRON JOBS
 # =============================================================================
 # Optional maintenance cron jobs
 
