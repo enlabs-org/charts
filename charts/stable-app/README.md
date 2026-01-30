@@ -141,7 +141,7 @@ Scheduled job execution:
 cronJobs:
   - name: cleanup
     schedule: "0 2 * * *"
-    image: "myapp:v1.0.0" 
+    image: "myapp:v1.0.0"
     command: "php artisan cleanup"
     restartPolicy: "OnFailure"
     concurrencyPolicy: "Forbid"
@@ -174,7 +174,7 @@ host: "php-app.example.com"
 replicas: 3
 
 useDefaultDeployment: true
-useDefaultService: true  
+useDefaultService: true
 useDefaultIngress: true
 
 tls: true

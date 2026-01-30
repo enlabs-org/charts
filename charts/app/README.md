@@ -299,7 +299,7 @@ Generate manifests locally:
 # Minimal configuration
 make template-app-minimal
 
-# Full configuration  
+# Full configuration
 make template-app
 
 # Output will be in .build/app/

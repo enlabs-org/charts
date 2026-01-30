@@ -125,7 +125,7 @@ ingress:
 
 Common IP ranges:
 - `10.0.0.0/8` - Private class A networks
-- `172.16.0.0/12` - Private class B networks  
+- `172.16.0.0/12` - Private class B networks
 - `192.168.0.0/16` - Private class C networks
 - `203.0.113.0/24` - Your office public IP range
 
@@ -203,7 +203,7 @@ When your databases are running in the same Kubernetes cluster:
 Server: mysql.database.svc.cluster.local
 Port: 3306
 
-# PostgreSQL in same namespace  
+# PostgreSQL in same namespace
 Server: postgresql.default.svc.cluster.local
 Port: 5432
 
@@ -341,5 +341,5 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
 ## Related Tools
 
 - [phpMyAdmin](https://www.phpmyadmin.net/) - MySQL-specific alternative
-- [pgAdmin](https://www.pgadmin.org/) - PostgreSQL-specific alternative  
+- [pgAdmin](https://www.pgadmin.org/) - PostgreSQL-specific alternative
 - [MongoDB Compass](https://www.mongodb.com/products/compass) - MongoDB GUI

@@ -245,7 +245,7 @@ useDefaultIngress: true
 This chart is commonly used in CI/CD pipelines for:
 
 1. **Pull Request Previews** - Deploy each PR to a unique URL
-2. **Feature Branch Testing** - Long-running feature environments  
+2. **Feature Branch Testing** - Long-running feature environments
 3. **Integration Testing** - Test with real dependencies
 4. **User Acceptance Testing** - Stakeholder review environments
 
@@ -267,7 +267,7 @@ helm uninstall pr-${PR_NUMBER}
 For new deployments, consider migrating to the [`app` chart](../app/README.md) which provides:
 
 - Multi-component architecture
-- Better resource organization  
+- Better resource organization
 - Auto-service creation
 - Enhanced security features
 - More intuitive configuration
@@ -307,7 +307,7 @@ Generate manifests locally:
 # Uses default values
 helm template my-preview-app charts/preview-app/
 
-# Test with custom values  
+# Test with custom values
 helm template my-preview-app charts/preview-app/ -f preview-values.yaml
 ```
 
