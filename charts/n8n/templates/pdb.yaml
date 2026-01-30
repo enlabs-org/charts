@@ -7,10 +7,11 @@ metadata:
   labels:
     {{- include "n8n.labels" . | nindent 4 }}
 spec:
-  {{- if .Values.pdb.minAvailable }}
+  {{- if and .Values.pdb.minAvailable .Values.pdb.maxUnavailable }}
+  {{- fail "Only one of pdb.minAvailable or pdb.maxUnavailable can be set in values.yaml" }}
+  {{- else if .Values.pdb.minAvailable }}
   minAvailable: {{ .Values.pdb.minAvailable }}
-  {{- end }}
-  {{- if .Values.pdb.maxUnavailable }}
+  {{- else if .Values.pdb.maxUnavailable }}
   maxUnavailable: {{ .Values.pdb.maxUnavailable }}
   {{- end }}
   selector:

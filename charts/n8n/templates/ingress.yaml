@@ -6,12 +6,20 @@ metadata:
   name: {{ include "n8n.fullname" . }}
   labels:
     {{- include "n8n.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
-    {{- if .Values.ingress.tls.enabled }}
-    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.issuer | default "letsencrypt" }}
+    {{- end }}
+    {{- $tlsEnabledAnnotations := false }}
+    {{- if .Values.ingress.tls }}
+      {{- if kindIs "bool" .Values.ingress.tls }}
+        {{- $tlsEnabledAnnotations = .Values.ingress.tls }}
+      {{- else if .Values.ingress.tls.enabled }}
+        {{- $tlsEnabledAnnotations = .Values.ingress.tls.enabled }}
+      {{- end }}
+    {{- end }}
+    {{- if $tlsEnabledAnnotations }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.issuer | default .Values.ingress.clusterIssuer | default "letsencrypt" }}
     {{- end }}
     {{- if .Values.ingress.whitelistSourceRange }}
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.whitelistSourceRange | quote }}
@@ -22,16 +30,18 @@ metadata:
     {{- if .Values.ingress.securityPathFilter.enabled }}
     nginx.ingress.kubernetes.io/server-snippet: |
       {{- range .Values.ingress.securityPathFilter.blockedPaths }}
-      location ~ {{ . }} {
+      location ~* ^{{ . }} {
         deny all;
         return 403;
       }
       {{- end }}
+      {{- if .Values.ingress.whitelistSourceRange }}
       # Allow ACME challenge paths to bypass whitelist
       location ~ ^/.well-known/acme-challenge/ {
         allow all;
         try_files $uri $uri/ =404;
       }
+      {{- end }}
     {{- end }}
 spec:
   {{- if .Values.ingress.className }}
@@ -39,11 +49,19 @@ spec:
   {{- else }}
   ingressClassName: nginx
   {{- end }}
-  {{- if .Values.ingress.tls.enabled }}
+  {{- $tlsEnabled := false }}
+  {{- if .Values.ingress.tls }}
+    {{- if kindIs "bool" .Values.ingress.tls }}
+      {{- $tlsEnabled = .Values.ingress.tls }}
+    {{- else if .Values.ingress.tls.enabled }}
+      {{- $tlsEnabled = .Values.ingress.tls.enabled }}
+    {{- end }}
+  {{- end }}
+  {{- if $tlsEnabled }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
-      secretName: {{ .Values.ingress.tls.secretName | default (printf "%s-tls" (include "n8n.fullname" .)) }}
+      secretName: {{ .Values.ingress.tls.secretName | default .Values.ingress.tlsSecretName | default (printf "%s-tls" (include "n8n.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}

@@ -71,7 +71,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 5678
 
 # =============================================================================
 # INGRESS CONFIGURATION
@@ -81,6 +81,7 @@ ingress:
   enabled: false
   className: "nginx"
   annotations: {}
+    # For Kubernetes <1.18 or legacy ingress controllers, you may need:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   host: ''
@@ -103,7 +104,7 @@ ingress:
     blockedPaths:
       - "/.git"
       - "/.env"
-      - "/.claude"
+      - "/.hg"
 
 # =============================================================================
 # HEALTH CHECKS

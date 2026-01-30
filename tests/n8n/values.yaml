@@ -43,7 +43,7 @@ securityContext:
 # Service
 service:
   type: ClusterIP
-  port: 80
+  port: 5678
 
 # Ingress with security features
 ingress:
@@ -65,7 +65,7 @@ ingress:
     blockedPaths:
       - "/.git"
       - "/.env"
-      - "/.claude"
+      - "/.svn"
       - "/admin"
 
 # Health checks
