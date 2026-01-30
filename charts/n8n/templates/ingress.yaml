@@ -1,40 +1,59 @@
-{{ if .Values.ingress.enabled }}
+{{- if .Values.ingress.enabled -}}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "n8n.fullname" . }}
+  labels:
+    {{- include "n8n.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    {{ if .Values.ingress.issueCertificate }}
-    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
-    {{ end }}
-    {{ if .Values.ingress.whitelistSourceRange }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+    {{- if .Values.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.issuer | default "letsencrypt" }}
+    {{- end }}
+    {{- if .Values.ingress.whitelistSourceRange }}
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.ingress.whitelistSourceRange | quote }}
-    {{ end }}
+    {{- end }}
+    {{- if .Values.ingress.proxyBodySize }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.ingress.proxyBodySize }}
+    {{- end }}
+    {{- if .Values.ingress.securityPathFilter.enabled }}
+    nginx.ingress.kubernetes.io/server-snippet: |
+      {{- range .Values.ingress.securityPathFilter.blockedPaths }}
+      location ~ {{ . }} {
+        deny all;
+        return 403;
+      }
+      {{- end }}
+      # Allow ACME challenge paths to bypass whitelist
+      location ~ ^/.well-known/acme-challenge/ {
+        allow all;
+        try_files $uri $uri/ =404;
+      }
+    {{- end }}
 spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- else }}
   ingressClassName: nginx
-  {{ if .Values.ingress.tls }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
-    {{ if .Values.ingress.tlsSecretName }}
-      secretName: {{ .Values.ingress.tlsSecretName}}
-    {{ else }}
-      secretName: {{ .Release.Name }}-tls
-    {{ end }}
-  {{ end }}
-
+      secretName: {{ .Values.ingress.tls.secretName | default (printf "%s-tls" (include "n8n.fullname" .)) }}
+  {{- end }}
   rules:
-
     - host: {{ .Values.ingress.host }}
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: {{ .Values.ingress.path | default "/" }}
+            pathType: {{ .Values.ingress.pathType | default "Prefix" }}
             backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ include "n8n.fullname" . }}
                 port:
-                    name: http
-{{ end }}
+                  name: http
+{{- end }}
