@@ -5,16 +5,11 @@ on:
     types: [opened, labeled]
   issue_comment:
     types: [created]
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
   claude-code:
-    # Run when:
-    # 1. Issue is opened/labeled with 'claude' label
-    # 2. Comment on issue starts with @claude
-    if: |
-      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'claude')) ||
-      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '@claude'))
-
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,13 +26,15 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Use issue body as prompt for new issues, comment body for follow-ups
-          prompt: |
-            ${{ github.event_name == 'issue_comment' && github.event.comment.body || github.event.issue.body }}
 
-            Issue title: ${{ github.event.issue.title }}
-            Issue number: #${{ github.event.issue.number }}
+          # Trigger on @claude mentions in comments
+          trigger_phrase: "@claude"
+
+          # Trigger on issues with 'claude' label
+          label_trigger: "claude"
+
           # Allowed tools for the action
           allowed_tools: "Bash,Read,Write,Edit,Glob,Grep,TodoWrite"
-          # Create PR with changes
-          direct_prompt: false
+
+          # Timeout for long-running tasks
+          timeout_minutes: "30"
