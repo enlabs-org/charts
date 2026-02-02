@@ -1,0 +1,29 @@
+---
+# Image
+image: ghcr.io/enlabs-org/k8s-pwa-dashboard:latest
+imagePullPolicy: Always
+
+# Replicas
+replicas: 1
+
+# Service
+servicePort: 80
+containerPort: 3001
+
+# Ingress
+ingress:
+  enabled: false
+  host: ''
+  tls: true
+  clusterIssuer: 'letsencrypt'
+  whitelistSourceRange: ''  # e.g. "10.0.0.0/8,192.168.0.0/16"
+
+# Configuration
+config:
+  excludeNamespaces:
+    - kube-system
+    - kube-public
+    - kube-node-lease
+    - default
+  pollingInterval: 5000
+  scalingEnabled: true
