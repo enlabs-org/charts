@@ -30,6 +30,10 @@ template-rbac:
 	rm -rf .build/rbac
 	helm template test-user charts/rbac --output-dir=.build -f tests/rbac/values.yaml --debug
 
+template-k8s-pwa-dashboard:
+	rm -rf .build/k8s-pwa-dashboard
+	helm template test-k8s-pwa-dashboard charts/k8s-pwa-dashboard --output-dir=.build -f tests/k8s-pwa-dashboard/values.yaml --debug
+
 helm-template:
 	make template-preview-app
 	make template-stable-app
@@ -37,6 +41,7 @@ helm-template:
 	make template-metabase
 	make template-adminer
 	make template-rbac
+	make template-k8s-pwa-dashboard
 
 helm-lint:
 	helm lint charts/preview-app
@@ -45,6 +50,7 @@ helm-lint:
 	helm lint charts/metabase
 	helm lint charts/adminer
 	helm lint charts/rbac
+	helm lint charts/k8s-pwa-dashboard
 
 clean:
 	rm -rf .build
