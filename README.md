@@ -24,6 +24,7 @@ helm repo update
 | **[adminer](charts/adminer/)** | Database management UI | [📖 README](charts/adminer/README.md) |
 | **[metabase](charts/metabase/)** | Business intelligence platform | [📖 README](charts/metabase/README.md) |
 | **[n8n](charts/n8n/)** | Workflow automation tool | [📖 README](charts/n8n/README.md) |
+| **[k8s-pwa-dashboard](charts/k8s-pwa-dashboard/)** | Kubernetes deployment dashboard | [📖 README](charts/k8s-pwa-dashboard/README.md) |
 
 ## Chart Categories
 
@@ -39,6 +40,9 @@ helm repo update
 ### Security & Automation
 - **rbac** - Cluster access control and user permissions
 - **n8n** - Workflow automation and integration platform
+
+### Monitoring & Operations
+- **k8s-pwa-dashboard** - Simple dashboard for monitoring and scaling deployments
 
 ## Migration Guide
 
