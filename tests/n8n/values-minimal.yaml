@@ -1,0 +1,18 @@
+---
+# Minimal configuration for n8n chart
+# Tests backward compatibility with existing values structure
+
+# Backward compatible image configuration  
+image: 'docker.n8n.io/n8nio/n8n:latest'
+imagePullPolicy: 'Always'
+
+# Basic deployment
+replicas: 1
+
+# Basic ingress
+ingress:
+  enabled: true
+  host: 'n8n-minimal.example.com'
+  tls:
+    enabled: true
+    issuer: 'letsencrypt'
