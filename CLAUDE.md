@@ -52,7 +52,7 @@ The `claude-code.yml` workflow enables AI-assisted issue resolution:
 2. Claude Code analyzes the issue and creates a PR with the solution
 3. Use `@claude` in comments for follow-up requests
 
-**Required secret:** `ANTHROPIC_API_KEY`
+**Required secret:** `CLAUDE_CODE_OAUTH_TOKEN`
 
 ## Charts
 
