@@ -25,9 +25,9 @@ jobs:
 
       - name: Run Claude Code
         uses: anthropics/claude-code-action@beta
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         with:
-          oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-
           # Trigger on @claude mentions in comments
           trigger_phrase: "@claude"
 
