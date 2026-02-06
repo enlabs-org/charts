@@ -28,6 +28,7 @@ jobs:
         with:
           # Authentication
           anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
           # Trigger on @claude mentions in comments
           trigger_phrase: "@claude"
