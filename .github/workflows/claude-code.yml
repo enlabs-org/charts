@@ -16,8 +16,6 @@ jobs:
       pull-requests: write
       issues: write
       id-token: write
-    env:
-      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
     steps:
       - name: Checkout
@@ -28,6 +26,9 @@ jobs:
       - name: Run Claude Code
         uses: anthropics/claude-code-action@beta
         with:
+          # Authentication
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
           # Trigger on @claude mentions in comments
           trigger_phrase: "@claude"
 
