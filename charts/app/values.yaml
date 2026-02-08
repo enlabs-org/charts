@@ -33,6 +33,45 @@ global:
   # Restart all pods on every deployment (adds random annotation)
   restartAfterRedeploy: false
 
+  # Affinity rules for pod scheduling
+  # Applied globally to all components unless overridden
+  affinity:
+    # Node affinity - target specific nodes
+    nodeAffinity:
+      # Preferred node labels (soft constraint)
+      # Example: preferredNodeLabels: {disktype: ssd, region: us-west-2}
+      preferredNodeLabels: {}
+      # Required node labels (hard constraint)
+      # Example: requiredNodeLabels: {accelerator: gpu}
+      requiredNodeLabels: {}
+      # Full Kubernetes nodeAffinity syntax (overrides shortcuts)
+      custom: {}
+
+    # Pod anti-affinity - keep pods apart
+    podAntiAffinity:
+      # Spread pods across topology domains (soft constraint)
+      # Example: preferredSpreadBy: ["kubernetes.io/hostname"]
+      preferredSpreadBy: []
+      # Spread pods across topology domains (hard constraint)
+      # Example: requiredSpreadBy: ["topology.kubernetes.io/zone"]
+      requiredSpreadBy: []
+      # Avoid pods from other components
+      # Example: avoidComponents: ["heavy-worker", "ml-processor"]
+      avoidComponents: []
+      # Full Kubernetes podAntiAffinity syntax (overrides shortcuts)
+      custom: {}
+
+    # Pod affinity - keep pods together
+    podAffinity:
+      # Prefer colocation with specific components
+      # Example: preferComponents: ["cache", "database-proxy"]
+      preferComponents: []
+      # Require colocation with specific components
+      # Example: requireComponents: ["cache"]
+      requireComponents: []
+      # Full Kubernetes podAffinity syntax (overrides shortcuts)
+      custom: {}
+
 # =============================================================================
 # COMPONENTS
 # =============================================================================
@@ -103,6 +142,9 @@ global:
 #       pdb:
 #         enabled: false
 #         minAvailable: 1
+#       affinity:                    # overrides global affinity
+#         podAntiAffinity:
+#           requiredSpreadBy: ["kubernetes.io/hostname"]
 #       initContainers: []
 #       additionalContainers: []
 #

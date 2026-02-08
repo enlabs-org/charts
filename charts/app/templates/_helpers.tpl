@@ -124,3 +124,188 @@ Usage: {{ include "app.databaseCertVolume" $.Values.global | nindent 8 }}
     secretName: {{ .databaseCert.secretName }}
 {{- end }}
 {{- end }}
+
+{{/*
+Affinity configuration - merges global and component-level settings
+Usage: {{ include "app.affinity" (dict "root" $ "componentName" $componentName "component" $component) }}
+*/}}
+{{- define "app.affinity" -}}
+{{- $global := .root.Values.global }}
+{{- $component := .component }}
+{{- $componentName := .componentName }}
+
+{{- /* Component affinity overrides global, null disables */ -}}
+{{- $affinity := dict }}
+{{- if $global.affinity }}
+{{- $affinity = $global.affinity }}
+{{- end }}
+{{- if hasKey $component "affinity" }}
+{{- if $component.affinity }}
+{{- $affinity = $component.affinity }}
+{{- else }}
+{{- $affinity = dict }}
+{{- end }}
+{{- end }}
+
+{{- if $affinity }}
+{{- $result := dict }}
+
+{{- if $affinity.nodeAffinity }}
+{{- $nodeAff := include "app.affinity.node" (dict "config" $affinity.nodeAffinity) | fromYaml }}
+{{- if $nodeAff }}
+{{- $_ := set $result "nodeAffinity" $nodeAff }}
+{{- end }}
+{{- end }}
+
+{{- if $affinity.podAntiAffinity }}
+{{- $podAntiAff := include "app.affinity.podAnti" (dict "root" .root "componentName" $componentName "config" $affinity.podAntiAffinity) | fromYaml }}
+{{- if $podAntiAff }}
+{{- $_ := set $result "podAntiAffinity" $podAntiAff }}
+{{- end }}
+{{- end }}
+
+{{- if $affinity.podAffinity }}
+{{- $podAff := include "app.affinity.pod" (dict "root" .root "componentName" $componentName "config" $affinity.podAffinity) | fromYaml }}
+{{- if $podAff }}
+{{- $_ := set $result "podAffinity" $podAff }}
+{{- end }}
+{{- end }}
+
+{{- if $result }}
+{{- toYaml $result }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Node affinity builder
+Usage: {{ include "app.affinity.node" (dict "config" $nodeAffinityConfig) }}
+*/}}
+{{- define "app.affinity.node" -}}
+{{- $config := .config }}
+
+{{- if $config.custom }}
+{{- toYaml $config.custom }}
+{{- else if or $config.requiredNodeLabels $config.preferredNodeLabels }}
+{{- $result := dict }}
+
+{{- if $config.requiredNodeLabels }}
+{{- $matchExpressions := list }}
+{{- range $key, $value := $config.requiredNodeLabels }}
+{{- $matchExpressions = append $matchExpressions (dict "key" $key "operator" "In" "values" (list $value)) }}
+{{- end }}
+{{- $required := dict "nodeSelectorTerms" (list (dict "matchExpressions" $matchExpressions)) }}
+{{- $_ := set $result "requiredDuringSchedulingIgnoredDuringExecution" $required }}
+{{- end }}
+
+{{- if $config.preferredNodeLabels }}
+{{- $preferred := list }}
+{{- range $key, $value := $config.preferredNodeLabels }}
+{{- $matchExpressions := list (dict "key" $key "operator" "In" "values" (list $value)) }}
+{{- $term := dict "weight" 100 "preference" (dict "matchExpressions" $matchExpressions) }}
+{{- $preferred = append $preferred $term }}
+{{- end }}
+{{- $_ := set $result "preferredDuringSchedulingIgnoredDuringExecution" $preferred }}
+{{- end }}
+
+{{- toYaml $result }}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod anti-affinity builder
+Usage: {{ include "app.affinity.podAnti" (dict "root" $ "componentName" $name "config" $config) }}
+*/}}
+{{- define "app.affinity.podAnti" -}}
+{{- $root := .root }}
+{{- $componentName := .componentName }}
+{{- $config := .config }}
+
+{{- if $config.custom }}
+{{- toYaml $config.custom }}
+{{- else }}
+{{- $result := dict }}
+{{- $required := list }}
+{{- $preferred := list }}
+
+{{- if $config.requiredSpreadBy }}
+{{- range $config.requiredSpreadBy }}
+{{- $labels := include "app.componentSelectorLabels" (dict "root" $root "componentName" $componentName) | fromYaml }}
+{{- $term := dict "topologyKey" . "labelSelector" (dict "matchLabels" $labels) }}
+{{- $required = append $required $term }}
+{{- end }}
+{{- end }}
+
+{{- if $config.preferredSpreadBy }}
+{{- range $config.preferredSpreadBy }}
+{{- $labels := include "app.componentSelectorLabels" (dict "root" $root "componentName" $componentName) | fromYaml }}
+{{- $term := dict "weight" 100 "podAffinityTerm" (dict "topologyKey" . "labelSelector" (dict "matchLabels" $labels)) }}
+{{- $preferred = append $preferred $term }}
+{{- end }}
+{{- end }}
+
+{{- if $config.avoidComponents }}
+{{- range $config.avoidComponents }}
+{{- $labels := include "app.componentSelectorLabels" (dict "root" $root "componentName" .) | fromYaml }}
+{{- $term := dict "weight" 100 "podAffinityTerm" (dict "topologyKey" "kubernetes.io/hostname" "labelSelector" (dict "matchLabels" $labels)) }}
+{{- $preferred = append $preferred $term }}
+{{- end }}
+{{- end }}
+
+{{- if $required }}
+{{- $_ := set $result "requiredDuringSchedulingIgnoredDuringExecution" $required }}
+{{- end }}
+{{- if $preferred }}
+{{- $_ := set $result "preferredDuringSchedulingIgnoredDuringExecution" $preferred }}
+{{- end }}
+
+{{- if $result }}
+{{- toYaml $result }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod affinity builder
+Usage: {{ include "app.affinity.pod" (dict "root" $ "componentName" $name "config" $config) }}
+*/}}
+{{- define "app.affinity.pod" -}}
+{{- $root := .root }}
+{{- $componentName := .componentName }}
+{{- $config := .config }}
+
+{{- if $config.custom }}
+{{- toYaml $config.custom }}
+{{- else }}
+{{- $result := dict }}
+{{- $required := list }}
+{{- $preferred := list }}
+
+{{- if $config.requireComponents }}
+{{- range $config.requireComponents }}
+{{- $labels := include "app.componentSelectorLabels" (dict "root" $root "componentName" .) | fromYaml }}
+{{- $term := dict "topologyKey" "kubernetes.io/hostname" "labelSelector" (dict "matchLabels" $labels) }}
+{{- $required = append $required $term }}
+{{- end }}
+{{- end }}
+
+{{- if $config.preferComponents }}
+{{- range $config.preferComponents }}
+{{- $labels := include "app.componentSelectorLabels" (dict "root" $root "componentName" .) | fromYaml }}
+{{- $term := dict "weight" 100 "podAffinityTerm" (dict "topologyKey" "kubernetes.io/hostname" "labelSelector" (dict "matchLabels" $labels)) }}
+{{- $preferred = append $preferred $term }}
+{{- end }}
+{{- end }}
+
+{{- if $required }}
+{{- $_ := set $result "requiredDuringSchedulingIgnoredDuringExecution" $required }}
+{{- end }}
+{{- if $preferred }}
+{{- $_ := set $result "preferredDuringSchedulingIgnoredDuringExecution" $preferred }}
+{{- end }}
+
+{{- if $result }}
+{{- toYaml $result }}
+{{- end }}
+{{- end }}
+{{- end }}

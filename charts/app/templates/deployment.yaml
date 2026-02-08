@@ -27,6 +27,10 @@ spec:
         {{- . | nindent 8 }}
         {{- end }}
     spec:
+      {{- with include "app.affinity" (dict "root" $ "componentName" $componentName "component" $component) }}
+      affinity:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- if $component.initContainers }}
       initContainers:
         {{- range $component.initContainers }}

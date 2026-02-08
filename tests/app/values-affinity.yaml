@@ -1,0 +1,75 @@
+---
+# Comprehensive affinity testing for app chart
+
+global:
+  image: "test-app:v1.0.0"
+  affinity:
+    nodeAffinity:
+      preferredNodeLabels:
+        region: us-west-2
+
+components:
+  # Test 1: Node affinity with required labels
+  gpu-worker:
+    replicas: 2
+    command: "python train.py"
+    affinity:
+      nodeAffinity:
+        requiredNodeLabels:
+          accelerator: gpu
+
+  # Test 2: Pod anti-affinity with required spread
+  ha-web:
+    replicas: 3
+    containerPort: 80
+    affinity:
+      podAntiAffinity:
+        requiredSpreadBy: ["kubernetes.io/hostname", "topology.kubernetes.io/zone"]
+
+  # Test 3: Pod affinity with colocation
+  cache:
+    replicas: 2
+    containerPort: 6379
+
+  cache-aware-api:
+    replicas: 2
+    containerPort: 8080
+    affinity:
+      podAffinity:
+        preferComponents: ["cache"]
+
+  # Test 4: Combined affinity rules
+  complex-service:
+    replicas: 3
+    containerPort: 9000
+    affinity:
+      nodeAffinity:
+        preferredNodeLabels:
+          disktype: ssd
+      podAntiAffinity:
+        preferredSpreadBy: ["kubernetes.io/hostname"]
+        avoidComponents: ["gpu-worker"]
+
+  # Test 5: Custom advanced syntax
+  custom-affinity:
+    replicas: 2
+    affinity:
+      nodeAffinity:
+        custom:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values: ["m5.large", "m5.xlarge"]
+
+  # Test 6: Disable global affinity for specific component
+  no-affinity:
+    replicas: 1
+    affinity: null
+
+  # Test 7: Component inherits global affinity
+  default-worker:
+    replicas: 2
+    command: "php artisan queue:work"
