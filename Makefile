@@ -14,6 +14,10 @@ template-app-minimal:
 	rm -rf .build/app
 	helm template test-app-minimal charts/app --output-dir=.build -f tests/app/values-minimal.yaml --debug
 
+template-app-affinity:
+	rm -rf .build/app-affinity
+	helm template test-app-affinity charts/app --output-dir=.build/app-affinity -f tests/app/values-affinity.yaml --debug
+
 template-metabase:
 	rm -rf .build/metabase
 	helm template test-metabase charts/metabase --output-dir=.build --debug

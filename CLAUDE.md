@@ -18,6 +18,7 @@ make helm-template
 # Generate manifests for a specific chart (outputs to .build/<chart-name>/)
 make template-app          # uses tests/app/values-full.yaml
 make template-app-minimal  # uses tests/app/values-minimal.yaml
+make template-app-affinity # uses tests/app/values-affinity.yaml
 make template-preview-app
 make template-stable-app
 make template-metabase
@@ -76,6 +77,7 @@ The `app` chart is the modern alternative to stable-app/preview-app with multi-c
 - Auto-creates Service when `containerPort` or `ingress.enabled` is defined
 - Resources limits/requests per component
 - PodDisruptionBudget per component
+- Kubernetes affinity rules - node affinity, pod affinity, and pod anti-affinity with shortcuts
 - IP whitelist for VPN restriction (`whitelistSourceRange`)
 - Security path filter (blocks .git, .env, etc.)
 - ACME challenge paths (/.well-known/acme-challenge) bypass IP whitelist automatically
@@ -124,6 +126,86 @@ cronJobs:
     command: "php artisan cleanup"
 ```
 
+### Affinity Configuration
+
+The app chart supports Kubernetes affinity rules for pod scheduling with simplified shortcuts and full K8s syntax support.
+
+**Node Affinity** - Target specific nodes:
+```yaml
+components:
+  ml-worker:
+    affinity:
+      nodeAffinity:
+        requiredNodeLabels:
+          accelerator: gpu
+        preferredNodeLabels:
+          disktype: ssd
+```
+
+**Pod Anti-Affinity** - Spread pods apart for HA or avoid resource contention:
+```yaml
+components:
+  web:
+    replicas: 3
+    affinity:
+      podAntiAffinity:
+        # Hard constraint: must be on different nodes
+        requiredSpreadBy: ["kubernetes.io/hostname"]
+        # Soft constraint: prefer different zones
+        preferredSpreadBy: ["topology.kubernetes.io/zone"]
+        # Avoid specific components
+        avoidComponents: ["heavy-worker"]
+```
+
+**Pod Affinity** - Colocate pods for low latency:
+```yaml
+components:
+  api:
+    affinity:
+      podAffinity:
+        # Prefer same node as cache
+        preferComponents: ["cache"]
+        # Require same node as database-proxy
+        requireComponents: ["database-proxy"]
+```
+
+**Global Affinity** - Apply defaults to all components:
+```yaml
+global:
+  affinity:
+    podAntiAffinity:
+      preferredSpreadBy: ["kubernetes.io/hostname"]
+
+components:
+  web:
+    # inherits global affinity
+  worker:
+    affinity:
+      # overrides global with component-specific rules
+      podAntiAffinity:
+        avoidComponents: ["web"]
+  cache:
+    affinity: null  # disables global affinity
+```
+
+**Advanced: Custom K8s Syntax** - For complex scenarios:
+```yaml
+components:
+  web:
+    affinity:
+      nodeAffinity:
+        custom:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            preference:
+              matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values: ["r5.xlarge", "r5.2xlarge"]
+```
+
+See `tests/app/values-affinity.yaml` for comprehensive examples.
+
 ## Legacy Charts (stable-app/preview-app)
 
 **stable-app and preview-app** share nearly identical templates and support:
@@ -152,6 +234,7 @@ The `app` chart uses shared helpers in `charts/app/templates/_helpers.tpl`:
 - `app.envFromSecret` - component-level overrides global
 - `app.customLabels` - merges global.labels with component.labels
 - `app.databaseCertVolume` / `app.databaseCertVolumeMount` - database cert handling
+- `app.affinity` / `app.affinity.node` / `app.affinity.podAnti` / `app.affinity.pod` - affinity rules generation
 
 ## Versioning
 
