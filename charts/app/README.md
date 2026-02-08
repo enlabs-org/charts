@@ -9,6 +9,7 @@ This is the recommended chart for deploying applications with multiple component
 - **Multi-component architecture** - Deploy multiple services (web, worker, scheduler) in a single release
 - **Auto-service creation** - Services are automatically created when `containerPort` or `ingress.enabled` is defined
 - **Global defaults** - Set common values like `image` and `host` globally, with per-component overrides
+- **Pod scheduling control** - Node affinity, pod affinity, and pod anti-affinity with simplified shortcuts
 - **Security features** - IP whitelisting, security path filters, basic auth support
 - **Resource management** - Per-component resource limits, Pod Disruption Budgets
 - **Job support** - One-time jobs and scheduled cron jobs
@@ -138,6 +139,133 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 | `pdb.enabled` | Enable PDB | `false` |
 | `pdb.minAvailable` | Minimum available pods | `1` |
 
+### Affinity Configuration
+
+Control pod scheduling with Kubernetes affinity rules. The chart supports both simplified shortcuts (for common use cases) and full Kubernetes syntax (for advanced scenarios).
+
+#### Node Affinity
+
+Target specific nodes based on labels:
+
+| Parameter | Description | Type |
+|-----------|-------------|------|
+| `affinity.nodeAffinity.preferredNodeLabels` | Soft constraint - prefer nodes with these labels | `{}` |
+| `affinity.nodeAffinity.requiredNodeLabels` | Hard constraint - require nodes with these labels | `{}` |
+| `affinity.nodeAffinity.custom` | Full Kubernetes nodeAffinity syntax | `{}` |
+
+**Example - GPU workloads:**
+```yaml
+components:
+  ml-worker:
+    affinity:
+      nodeAffinity:
+        requiredNodeLabels:
+          accelerator: gpu
+        preferredNodeLabels:
+          disktype: ssd
+```
+
+#### Pod Anti-Affinity
+
+Spread pods apart for high availability or avoid resource contention:
+
+| Parameter | Description | Type |
+|-----------|-------------|------|
+| `affinity.podAntiAffinity.preferredSpreadBy` | Soft constraint - spread across topology domains | `[]` |
+| `affinity.podAntiAffinity.requiredSpreadBy` | Hard constraint - must spread across topology domains | `[]` |
+| `affinity.podAntiAffinity.avoidComponents` | Soft constraint - avoid other components | `[]` |
+| `affinity.podAntiAffinity.custom` | Full Kubernetes podAntiAffinity syntax | `{}` |
+
+**Example - High availability:**
+```yaml
+components:
+  web:
+    replicas: 3
+    affinity:
+      podAntiAffinity:
+        # Hard: must be on different nodes
+        requiredSpreadBy: ["kubernetes.io/hostname"]
+        # Soft: prefer different zones
+        preferredSpreadBy: ["topology.kubernetes.io/zone"]
+```
+
+**Example - Avoid resource contention:**
+```yaml
+components:
+  worker:
+    affinity:
+      podAntiAffinity:
+        avoidComponents: ["heavy-batch-job", "ml-worker"]
+```
+
+#### Pod Affinity
+
+Colocate pods together for low latency:
+
+| Parameter | Description | Type |
+|-----------|-------------|------|
+| `affinity.podAffinity.preferComponents` | Soft constraint - prefer same node as components | `[]` |
+| `affinity.podAffinity.requireComponents` | Hard constraint - require same node as components | `[]` |
+| `affinity.podAffinity.custom` | Full Kubernetes podAffinity syntax | `{}` |
+
+**Example - Colocate with cache:**
+```yaml
+components:
+  cache:
+    replicas: 2
+
+  api:
+    affinity:
+      podAffinity:
+        preferComponents: ["cache"]
+```
+
+#### Global Affinity
+
+Apply affinity defaults to all components:
+
+```yaml
+global:
+  affinity:
+    podAntiAffinity:
+      preferredSpreadBy: ["kubernetes.io/hostname"]
+
+components:
+  web:
+    # inherits global affinity
+
+  worker:
+    # override global affinity
+    affinity:
+      podAntiAffinity:
+        avoidComponents: ["web"]
+
+  cache:
+    # disable global affinity
+    affinity: null
+```
+
+#### Advanced Custom Syntax
+
+For complex scenarios not covered by shortcuts:
+
+```yaml
+components:
+  web:
+    affinity:
+      nodeAffinity:
+        custom:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            preference:
+              matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values: ["r5.xlarge", "r5.2xlarge"]
+```
+
+See [values-affinity.yaml](../../tests/app/values-affinity.yaml) for comprehensive examples.
+
 ### Jobs and CronJobs
 
 Jobs are one-time executions:
@@ -257,6 +385,7 @@ components:
 See the test configurations for complete examples:
 - [Minimal configuration](../../tests/app/values-minimal.yaml)
 - [Full-featured configuration](../../tests/app/values-full.yaml)
+- [Affinity examples](../../tests/app/values-affinity.yaml)
 
 ## Migration from stable-app/preview-app
 
@@ -302,10 +431,14 @@ make template-app-minimal
 # Full configuration
 make template-app
 
+# Affinity examples
+make template-app-affinity
+
 # Output will be in .build/app/
 ```
 
 ## Version History
 
-- **1.0.3** - Current version
+- **1.1.0** - Added comprehensive affinity support (node affinity, pod affinity, pod anti-affinity)
+- **1.0.3** - Maintenance release
 - **1.0.0** - Initial release
