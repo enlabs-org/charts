@@ -57,6 +57,14 @@ entries:
     version: 1.0.0
   k8s-pwa-dashboard:
   - apiVersion: v1
+    created: "2026-02-09T12:48:00.38536174Z"
+    description: Helm Chart for K8s Preview App Dashboard
+    digest: 753017f4aaac71331820554e8097485f39ebeaf1928ce85c1f5116ffb1ba9d3f
+    name: k8s-pwa-dashboard
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/k8s-pwa-dashboard-1.2.0/k8s-pwa-dashboard-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v1
     created: "2026-02-02T12:23:59.281514019Z"
     description: Helm Chart for K8s Preview App Dashboard
     digest: cf78de816e45ebf7a9309e19362bf656404b1dc3fa8a55e5d7c3fa759c0ff9a5
@@ -405,4 +413,4 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
     version: 1.0.0-rc
-generated: "2026-02-08T06:55:28.478399873Z"
+generated: "2026-02-09T12:48:00.385512402Z"
