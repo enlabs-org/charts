@@ -8,10 +8,16 @@
 
 - **Dynamic namespace discovery** - Automatically shows all namespaces except those in blacklist
 - **Deployment status monitoring** - Running, error, pending, and stopped states
+- **Deployment detail view** - Click any deployment to see detailed information including pods and containers
+- **Pod monitoring** - View pod status, restart counts, age, and container readiness
+- **Container information** - See container images, tags, and resource limits/requests
+- **Read-only pod logs** - View last 100 lines of logs from any pod/container
+- **File browser** - Browse pod filesystem, navigate directories, and download files (read-only)
 - **Start/Stop scaling** - Scale deployments to 0 or 1 replica with one click
 - **Ingress URL extraction** - Displays URLs from Ingress resources
 - **Auto-refresh** - Polling every 5 seconds (configurable)
 - **Collapse/Expand** - Organize view by namespace
+- **Dark mode** - Toggle between light and dark themes
 - **IP whitelisting** - Restrict access to specific IP ranges
 - **Automatic TLS** - Let's Encrypt certificate management
 
@@ -121,9 +127,12 @@ The chart automatically creates a ServiceAccount with ClusterRole permissions to
 - **Deployments**: `get`, `list`, `watch`
 - **Deployments/scale**: `get`, `patch`, `update`
 - **Namespaces**: `get`, `list`
+- **Pods**: `get`, `list`
+- **Pods/log**: `get` (read-only log access)
+- **Pods/exec**: `create` (for file browser functionality)
 - **Ingresses**: `get`, `list`
 
-These permissions are required for the dashboard to monitor and scale deployments across all namespaces.
+These permissions are required for the dashboard to monitor and scale deployments, view pod status, read logs, and browse files across all namespaces.
 
 ## Security Configuration
 
@@ -225,12 +234,24 @@ kubectl port-forward -n k8s-pwa-dashboard svc/k8s-pwa-dashboard 8080:80
 The dashboard displays:
 
 1. **Namespace sections** - Collapsible groups for each namespace
-2. **Deployment cards** - Status, replica count, and ingress URLs
+2. **Deployment cards** - Status, replica count, and ingress URLs (click to view details)
 3. **Status indicators**:
    - 🟢 **Running** - All replicas ready
    - 🟡 **Pending** - Deployment starting up
    - 🔴 **Error** - Deployment has issues
-   - ⚪ **Stopped** - Scaled to zero
+   - 🔵 **Stopped** - Scaled to zero
+
+### Deployment Detail View
+
+Click any deployment card to view detailed information in a two-column layout:
+
+**Left Column:**
+1. **Containers** - Image names, tags, and resource limits/requests for each container
+2. **Pods** - Table showing all pods with status, restart count, age, and container readiness
+
+**Right Column:**
+3. **Logs** - Read-only view of the last 100 lines from any pod/container (with dropdown selector for multi-container pods)
+4. **File Browser** - Navigate pod filesystem, browse directories, and download files (hidden files starting with . are filtered out)
 
 ### Scaling Deployments
 
@@ -343,6 +364,8 @@ curl -I https://k8s-dashboard.example.com/api/v1/health
 
 ## Version History
 
+- **1.2.0** - Added file browser with directory navigation and file download, improved detail page layout (two-column)
+- **1.1.0** - Added deployment detail view with pod monitoring, container info, and read-only log viewer
 - **1.0.0** - Initial release
 
 ## Related Resources
