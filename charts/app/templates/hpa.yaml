@@ -1,0 +1,49 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.hpa }}
+{{- if $component.hpa.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  minReplicas: {{ $component.hpa.minReplicas | default 1 }}
+  maxReplicas: {{ required (printf "components.%s.hpa.maxReplicas is required when HPA is enabled" $componentName) $component.hpa.maxReplicas }}
+  metrics:
+    {{- if $component.hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $component.hpa.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if $component.hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $component.hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+    {{- if $component.hpa.customMetrics }}
+    {{- toYaml $component.hpa.customMetrics | nindent 4 }}
+    {{- end }}
+  {{- if $component.hpa.behavior }}
+  behavior:
+    {{- toYaml $component.hpa.behavior | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -76,6 +76,7 @@ The `app` chart is the modern alternative to stable-app/preview-app with multi-c
 - `global.image` and `global.host` as defaults - components inherit unless overridden
 - Auto-creates Service when `containerPort` or `ingress.enabled` is defined
 - Resources limits/requests per component
+- HorizontalPodAutoscaler (HPA) per component
 - PodDisruptionBudget per component
 - Kubernetes affinity rules - node affinity, pod affinity, and pod anti-affinity with shortcuts
 - IP whitelist for VPN restriction (`whitelistSourceRange`)
