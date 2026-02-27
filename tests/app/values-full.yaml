@@ -78,6 +78,11 @@ components:
     affinity:
       podAntiAffinity:
         requiredSpreadBy: ["topology.kubernetes.io/zone"]
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
     initContainers:
       - name: wait-for-db
         image: "busybox:latest"
@@ -114,6 +119,12 @@ components:
     affinity:
       podAntiAffinity:
         avoidComponents: ["web"]
+    hpa:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 75
 
   scheduler:
     enabled: true
