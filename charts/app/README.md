@@ -86,6 +86,8 @@ cronJobs:
 | `global.envFromSecret` | Default secret name for environment variables | `null` |
 | `global.useDatabaseCert` | Enable database certificate volume | `false` |
 | `global.restartAfterRedeploy` | Force pod restart on every deployment | `false` |
+| `global.securityPathFilter.enabled` | Enable security path filter for all components | `false` |
+| `global.securityPathFilter.blockedPaths` | Default blocked paths for all components | `[]` |
 
 ### Component Configuration
 
@@ -129,8 +131,8 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 | `ingress.wwwRedirect` | Redirect www subdomain | `false` |
 | `ingress.basicAuth.enabled` | Enable basic auth | `false` |
 | `ingress.whitelistSourceRange` | IP whitelist (comma-separated) | `""` |
-| `ingress.securityPathFilter.enabled` | Block sensitive paths | `false` |
-| `ingress.securityPathFilter.blockedPaths` | Array of blocked paths | `["/.git", "/.env"]` |
+| `ingress.securityPathFilter.enabled` | Block sensitive paths (overrides global) | `false` |
+| `ingress.securityPathFilter.blockedPaths` | Array of blocked paths (overrides global) | `[]` |
 
 ### Pod Disruption Budget
 
@@ -302,24 +304,36 @@ components:
       whitelistSourceRange: "10.0.0.0/8,192.168.0.0/16"
 ```
 
-**Note:** ACME challenge paths (`/.well-known/acme-challenge/*`) automatically bypass IP whitelist restrictions for certificate renewal.
-
 ### Security Path Filter
 
-Block access to sensitive paths:
+Block access to sensitive paths by creating a standalone blocking Ingress resource. Blocked paths are routed to a non-existent backend service, causing NGINX to return 404.
+
+The security path filter supports global defaults with per-component overrides (same pattern as affinity):
 
 ```yaml
+global:
+  securityPathFilter:
+    enabled: true
+    blockedPaths:
+      - "/.git"
+      - "/.env"
+
 components:
   web:
     ingress:
       enabled: true
+      # inherits global.securityPathFilter
+  api:
+    ingress:
+      enabled: true
       securityPathFilter:
         enabled: true
-        blockedPaths:
-          - "/.git"
-          - "/.env"
-          - "/.claude"
-          - "/vendor"
+        blockedPaths: ["/.git", "/.env", "/vendor"]  # override global
+  admin:
+    ingress:
+      enabled: true
+      securityPathFilter:
+        enabled: false  # disable for this component
 ```
 
 ### Basic Authentication
@@ -439,6 +453,7 @@ make template-app-affinity
 
 ## Version History
 
+- **1.2.0** - Replaced server-snippet security path filter with standalone blocking Ingress, added global securityPathFilter support
 - **1.1.0** - Added comprehensive affinity support (node affinity, pod affinity, pod anti-affinity)
 - **1.0.3** - Maintenance release
 - **1.0.0** - Initial release
