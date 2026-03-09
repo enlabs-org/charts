@@ -266,6 +266,32 @@ Usage: {{ include "app.affinity.podAnti" (dict "root" $ "componentName" $name "c
 {{- end }}
 
 {{/*
+Resolve securityPathFilter - component-level overrides global
+Usage: {{ include "app.securityPathFilter" (dict "component" $component "global" $.Values.global) }}
+Returns the resolved securityPathFilter config as YAML, or empty string if disabled/not set.
+*/}}
+{{- define "app.securityPathFilter" -}}
+{{- $filter := dict }}
+{{- if .global.securityPathFilter }}
+{{- $filter = .global.securityPathFilter }}
+{{- end }}
+{{- if .component.ingress }}
+{{- if hasKey .component.ingress "securityPathFilter" }}
+{{- if .component.ingress.securityPathFilter }}
+{{- $filter = .component.ingress.securityPathFilter }}
+{{- else }}
+{{- $filter = dict }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if and $filter (kindIs "map" $filter) }}
+{{- if $filter.enabled }}
+{{- toYaml $filter }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
 Pod affinity builder
 Usage: {{ include "app.affinity.pod" (dict "root" $ "componentName" $name "config" $config) }}
 */}}
