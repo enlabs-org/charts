@@ -79,8 +79,7 @@ The `app` chart is the modern alternative to stable-app/preview-app with multi-c
 - PodDisruptionBudget per component
 - Kubernetes affinity rules - node affinity, pod affinity, and pod anti-affinity with shortcuts
 - IP whitelist for VPN restriction (`whitelistSourceRange`)
-- Security path filter (blocks .git, .env, etc.)
-- ACME challenge paths (/.well-known/acme-challenge) bypass IP whitelist automatically
+- Security path filter via standalone blocking Ingress (blocks .git, .env, etc.) with global defaults
 
 **Structure:**
 ```yaml
@@ -90,6 +89,9 @@ global:
   imagePullPolicy: Always
   envFromSecret: app-secrets
   useDatabaseCert: false
+  securityPathFilter:          # default for all components with ingress
+    enabled: true
+    blockedPaths: ["/.git", "/.env"]
 
 components:
   web:
@@ -103,9 +105,7 @@ components:
       enabled: true
       # host: uses global.host
       whitelistSourceRange: "10.0.0.0/8"
-      securityPathFilter:
-        enabled: true
-        blockedPaths: ["/.git", "/.env"]
+      # securityPathFilter: inherits from global
     pdb:
       enabled: true
       minAvailable: 1
@@ -235,6 +235,7 @@ The `app` chart uses shared helpers in `charts/app/templates/_helpers.tpl`:
 - `app.customLabels` - merges global.labels with component.labels
 - `app.databaseCertVolume` / `app.databaseCertVolumeMount` - database cert handling
 - `app.affinity` / `app.affinity.node` / `app.affinity.podAnti` / `app.affinity.pod` - affinity rules generation
+- `app.securityPathFilter` - resolves securityPathFilter with priority: component > global
 
 ## Versioning
 
