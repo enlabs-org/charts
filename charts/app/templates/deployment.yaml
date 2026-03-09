@@ -87,7 +87,7 @@ spec:
             {{- toYaml $component.env | nindent 12 }}
             {{- end }}
           {{- if $component.livenessProbe }}
-          {{- if ne ($component.livenessProbe.enabled | default true) false }}
+          {{- if $component.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
               path: {{ $component.livenessProbe.path | default "/" }}
