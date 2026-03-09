@@ -46,25 +46,6 @@ metadata:
     {{- /* IP Whitelist for VPN restriction */}}
     {{- if $component.ingress.whitelistSourceRange }}
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ $component.ingress.whitelistSourceRange | quote }}
-    {{- /* Allow ACME challenge to bypass whitelist when TLS is enabled */}}
-    {{- if $tlsEnabled }}
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      location /.well-known/acme-challenge/ {
-        allow all;
-      }
-    {{- end }}
-    {{- end }}
-    {{- /* Security path filter via server-snippet */}}
-    {{- if $component.ingress.securityPathFilter }}
-    {{- if $component.ingress.securityPathFilter.enabled }}
-    nginx.ingress.kubernetes.io/server-snippet: |
-      {{- range $component.ingress.securityPathFilter.blockedPaths }}
-      location ~* ^{{ . }} {
-          deny all;
-          return 404;
-      }
-      {{- end }}
-    {{- end }}
     {{- end }}
 spec:
   ingressClassName: nginx

@@ -1,0 +1,58 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.ingress }}
+{{- if $component.ingress.enabled }}
+{{- $resolved := include "app.securityPathFilter" (dict "component" $component "global" $.Values.global) }}
+{{- if $resolved }}
+{{- $filter := $resolved | fromYaml }}
+{{- $ingressHost := $component.ingress.host | default $.Values.global.host }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-security-block
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: nginx
+  {{- $tlsEnabled := true }}
+  {{- if $component.ingress.tls }}
+  {{- if kindIs "bool" $component.ingress.tls.enabled }}
+  {{- $tlsEnabled = $component.ingress.tls.enabled }}
+  {{- end }}
+  {{- end }}
+  {{- if $tlsEnabled }}
+  tls:
+    - hosts:
+        - {{ $ingressHost }}
+      {{- $customSecretName := "" }}
+      {{- if $component.ingress.tls }}
+      {{- $customSecretName = $component.ingress.tls.secretName }}
+      {{- end }}
+      {{- if $customSecretName }}
+      secretName: {{ $customSecretName }}
+      {{- else }}
+      secretName: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-tls
+      {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ $ingressHost }}
+      http:
+        paths:
+          {{- range $filter.blockedPaths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-security-block
+                port:
+                  number: 80
+          {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
