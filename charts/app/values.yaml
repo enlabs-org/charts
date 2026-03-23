@@ -11,6 +11,9 @@ global:
   # Default host for ingress (can be overridden per component)
   host: null
 
+  # Default ingress class name (can be overridden per component via ingress.className)
+  ingressClassName: nginx
+
   # Image pull policy for all containers
   imagePullPolicy: Always
 
@@ -117,6 +120,7 @@ global:
 #       ingress:
 #         enabled: true
 #         host: "example.com"
+#         className: ""               # override global.ingressClassName
 #         path: "/"                    # default: "/"
 #         pathType: Prefix             # default: "Prefix"
 #         tls:                         # TLS is enabled by default

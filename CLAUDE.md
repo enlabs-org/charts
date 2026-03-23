@@ -73,7 +73,7 @@ The `app` chart is the modern alternative to stable-app/preview-app with multi-c
 
 **Key features:**
 - Multiple deployments per release via `components` map - each can be scaled independently
-- `global.image` and `global.host` as defaults - components inherit unless overridden
+- `global.image`, `global.host`, and `global.ingressClassName` as defaults - components inherit unless overridden
 - Auto-creates Service when `containerPort` or `ingress.enabled` is defined
 - Resources limits/requests per component
 - PodDisruptionBudget per component
@@ -86,6 +86,7 @@ The `app` chart is the modern alternative to stable-app/preview-app with multi-c
 global:
   image: "myapp:v1"           # default for all components/jobs
   host: "app.example.com"     # default host for ingress
+  ingressClassName: nginx      # default ingress class (e.g. nginx, traefik)
   imagePullPolicy: Always
   envFromSecret: app-secrets
   useDatabaseCert: false
@@ -104,6 +105,7 @@ components:
     ingress:
       enabled: true
       # host: uses global.host
+      # className: uses global.ingressClassName
       whitelistSourceRange: "10.0.0.0/8"
       # securityPathFilter: inherits from global
     pdb:

@@ -48,7 +48,7 @@ metadata:
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ $component.ingress.whitelistSourceRange | quote }}
     {{- end }}
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ $component.ingress.className | default $.Values.global.ingressClassName | default "nginx" }}
   {{- if $tlsEnabled }}
   tls:
     - hosts:

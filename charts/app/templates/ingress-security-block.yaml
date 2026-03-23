@@ -17,7 +17,7 @@ metadata:
     {{- . | nindent 4 }}
     {{- end }}
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ $component.ingress.className | default $.Values.global.ingressClassName | default "nginx" }}
   {{- $tlsEnabled := true }}
   {{- if $component.ingress.tls }}
   {{- if kindIs "bool" $component.ingress.tls.enabled }}
