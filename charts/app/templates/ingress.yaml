@@ -45,7 +45,12 @@ metadata:
     {{- end }}
     {{- /* IP Whitelist for VPN restriction */}}
     {{- if $component.ingress.whitelistSourceRange }}
+    {{- $isTraefik := include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
+    {{- if $isTraefik }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-{{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-ip-allowlist@kubernetescrd
+    {{- else }}
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ $component.ingress.whitelistSourceRange | quote }}
+    {{- end }}
     {{- end }}
 spec:
   ingressClassName: {{ $component.ingress.className | default $.Values.global.ingressClassName | default "nginx" }}

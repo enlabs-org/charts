@@ -121,6 +121,17 @@ components:
     replicas: 1
     command: "php artisan schedule:work"
 
+  traefik-web:
+    enabled: true
+    image: "myapp-web:v1.0.0"
+    replicas: 2
+    containerPort: 80
+    ingress:
+      enabled: true
+      host: "traefik-app.example.com"
+      className: traefik
+      whitelistSourceRange: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
 jobs:
   - name: db-migrate
     image: "myapp-web:v1.0.0"

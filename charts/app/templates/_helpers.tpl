@@ -292,6 +292,16 @@ Returns the resolved securityPathFilter config as YAML, or empty string if disab
 {{- end }}
 
 {{/*
+Check if ingress class is traefik
+Usage: {{ include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
+Returns "true" if traefik, empty string otherwise.
+*/}}
+{{- define "app.isTraefik" -}}
+{{- $className := .className | default .globalClassName | default "nginx" -}}
+{{- if eq $className "traefik" -}}true{{- end -}}
+{{- end -}}
+
+{{/*
 Pod affinity builder
 Usage: {{ include "app.affinity.pod" (dict "root" $ "componentName" $name "config" $config) }}
 */}}
