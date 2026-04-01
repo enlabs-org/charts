@@ -1,0 +1,29 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.ingress }}
+{{- if $component.ingress.enabled }}
+{{- if $component.ingress.whitelistSourceRange }}
+{{- $isTraefik := include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
+{{- if $isTraefik }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-ip-allowlist
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  ipAllowList:
+    sourceRange:
+      {{- range splitList "," $component.ingress.whitelistSourceRange }}
+      - {{ trim . | quote }}
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
