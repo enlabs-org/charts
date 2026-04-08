@@ -34,8 +34,9 @@ spec:
       {{- if $component.initContainers }}
       initContainers:
         {{- range $component.initContainers }}
+        {{- $initImage := .image | default $.Values.global.image }}
         - name: {{ .name }}
-          image: {{ required "initContainer.image is required" .image }}
+          image: {{ required "initContainer.image or global.image is required" $initImage }}
           imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
           {{- if .command }}
           command: ['sh', '-c', {{ .command | quote }}]
