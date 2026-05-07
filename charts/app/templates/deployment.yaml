@@ -12,6 +12,10 @@ metadata:
     {{- end }}
 spec:
   replicas: {{ $component.replicas | default 1 }}
+  {{- with $component.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "app.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 6 }}
