@@ -98,6 +98,7 @@ Each component supports the following configuration:
 | `enabled` | Enable this component | `true` |
 | `image` | Container image (overrides global.image) | Uses global.image |
 | `replicas` | Number of replicas | `1` |
+| `strategy` | Deployment strategy (full Kubernetes syntax) | Kubernetes default |
 | `containerPort` | Container port (triggers service creation) | `null` |
 | `command` | Container command | `null` |
 | `resources.requests` | Resource requests | `{}` |
@@ -133,6 +134,30 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 | `ingress.whitelistSourceRange` | IP whitelist (comma-separated) | `""` |
 | `ingress.securityPathFilter.enabled` | Block sensitive paths (overrides global) | `false` |
 | `ingress.securityPathFilter.blockedPaths` | Array of blocked paths (overrides global) | `[]` |
+
+### Deployment Strategy
+
+Control how rolling updates are performed. Useful when combined with pod anti-affinity or topology spread constraints:
+
+```yaml
+components:
+  web:
+    replicas: 2
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 1
+        maxSurge: 0
+    affinity:
+      podAntiAffinity:
+        requiredSpreadBy: ["kubernetes.io/hostname"]
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `strategy.type` | Strategy type (`RollingUpdate` or `Recreate`) | `RollingUpdate` |
+| `strategy.rollingUpdate.maxUnavailable` | Max unavailable pods during update | `25%` |
+| `strategy.rollingUpdate.maxSurge` | Max extra pods during update | `25%` |
 
 ### Pod Disruption Budget
 
@@ -453,6 +478,7 @@ make template-app-affinity
 
 ## Version History
 
+- **1.6.0** - Added optional deployment strategy configuration per component
 - **1.2.0** - Replaced server-snippet security path filter with standalone blocking Ingress, added global securityPathFilter support
 - **1.1.0** - Added comprehensive affinity support (node affinity, pod affinity, pod anti-affinity)
 - **1.0.3** - Maintenance release
