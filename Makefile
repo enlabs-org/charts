@@ -28,7 +28,11 @@ template-adminer:
 
 template-n8n:
 	rm -rf .build/n8n
-	helm template test-n8n charts/n8n --output-dir=.build --debug
+	helm template test-n8n charts/n8n --output-dir=.build -f tests/n8n/values.yaml --debug
+
+template-n8n-minimal:
+	rm -rf .build/n8n
+	helm template test-n8n-minimal charts/n8n --output-dir=.build -f tests/n8n/values-minimal.yaml --debug
 
 template-rbac:
 	rm -rf .build/rbac
@@ -45,6 +49,7 @@ helm-template:
 	make template-app-affinity
 	make template-metabase
 	make template-adminer
+	make template-n8n
 	make template-rbac
 	make template-k8s-pwa-dashboard
 
@@ -54,6 +59,7 @@ helm-lint:
 	helm lint charts/app
 	helm lint charts/metabase
 	helm lint charts/adminer
+	helm lint charts/n8n
 	helm lint charts/rbac
 	helm lint charts/k8s-pwa-dashboard
 
