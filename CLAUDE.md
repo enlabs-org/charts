@@ -87,6 +87,7 @@ global:
   image: "myapp:v1"           # default for all components/jobs
   host: "app.example.com"     # default host for ingress
   ingressClassName: nginx      # default ingress class (e.g. nginx, traefik)
+  timezone: "Europe/Prague"    # timezone for CronJobs (IANA tz database)
   imagePullPolicy: Always
   envFromSecret: app-secrets
   useDatabaseCert: false

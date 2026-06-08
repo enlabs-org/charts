@@ -33,6 +33,10 @@ global:
     mountPath: "/etc/ssl/certs"
     secretName: "database-cert"
 
+  # Timezone for CronJobs (e.g. "Europe/Prague", "UTC")
+  # See: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
+  timezone: null
+
   # Restart all pods on every deployment (adds random annotation)
   restartAfterRedeploy: false
 
@@ -202,6 +206,7 @@ jobs: []
 #       restartPolicy: OnFailure
 #       backoffLimit: 3
 #       concurrencyPolicy: Forbid
+#       timezone: "UTC"                # override global.timezone
 #       resources:
 #         requests:
 #           cpu: "50m"
