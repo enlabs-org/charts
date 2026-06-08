@@ -12,6 +12,10 @@ metadata:
     {{- end }}
 spec:
   schedule: {{ required "cronJobs[].schedule is required" .schedule | quote }}
+  {{- $timezone := .timezone | default $.Values.global.timezone }}
+  {{- if $timezone }}
+  timeZone: {{ $timezone | quote }}
+  {{- end }}
   concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" }}
   jobTemplate:
     spec:

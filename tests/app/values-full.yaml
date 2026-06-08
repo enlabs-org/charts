@@ -2,6 +2,7 @@
 # Full test values for app chart demonstrating all features
 
 global:
+  timezone: "Europe/Prague"
   imagePullPolicy: Always
   envFromSecret: app-secrets
   useDatabaseCert: true
