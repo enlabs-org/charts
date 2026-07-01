@@ -302,6 +302,51 @@ Returns "true" if traefik, empty string otherwise.
 {{- end -}}
 
 {{/*
+PVC name for a component-level persistence entry.
+Auto-generated PVCs are named {release}-{component}-{persistenceName}.
+Usage: {{ include "app.componentPvcName" (dict "releaseName" $.Release.Name "componentName" $name "persistenceName" .name) }}
+*/}}
+{{- define "app.componentPvcName" -}}
+{{- printf "%s-%s-%s" .releaseName .componentName .persistenceName | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Volume mounts for all persistence entries of a component.
+Usage: {{ include "app.persistenceVolumeMounts" $component.persistence | nindent 12 }}
+*/}}
+{{- define "app.persistenceVolumeMounts" -}}
+{{- range . }}
+- name: {{ .name }}
+  mountPath: {{ required "persistence[].mountPath is required" .mountPath }}
+  {{- if .subPath }}
+  subPath: {{ .subPath }}
+  {{- end }}
+  {{- if .readOnly }}
+  readOnly: {{ .readOnly }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod-level volumes for all persistence entries of a component.
+Each entry becomes a persistentVolumeClaim volume - either auto-created or existingClaim.
+Usage: {{ include "app.persistenceVolumes" (dict "releaseName" $.Release.Name "componentName" $componentName "persistence" $component.persistence) | nindent 8 }}
+*/}}
+{{- define "app.persistenceVolumes" -}}
+{{- $releaseName := .releaseName }}
+{{- $componentName := .componentName }}
+{{- range .persistence }}
+- name: {{ .name }}
+  persistentVolumeClaim:
+    {{- if .existingClaim }}
+    claimName: {{ .existingClaim }}
+    {{- else }}
+    claimName: {{ include "app.componentPvcName" (dict "releaseName" $releaseName "componentName" $componentName "persistenceName" .name) }}
+    {{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
 Pod affinity builder
 Usage: {{ include "app.affinity.pod" (dict "root" $ "componentName" $name "config" $config) }}
 */}}

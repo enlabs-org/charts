@@ -1,0 +1,118 @@
+---
+# Persistence test values for app chart
+# Demonstrates:
+# - Static PersistentVolumes (NFS + hostPath + CSI)
+# - Chart-level shared PersistentVolumeClaims
+# - Component-level auto-created PVCs
+# - Reference to existing (external) PVCs
+# - Mount into initContainers and sidecars
+
+global:
+  image: "myapp:v1.0.0"
+
+# Static PVs (rare - use only for pre-provisioned storage)
+persistentVolumes:
+  - name: shared-nfs
+    capacity: 100Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: ""
+    reclaimPolicy: Retain
+    nfs:
+      server: nfs.example.com
+      path: /exports/shared
+
+  - name: local-dev-data
+    capacity: 5Gi
+    accessModes: [ReadWriteOnce]
+    reclaimPolicy: Delete
+    hostPath:
+      path: /data/dev
+
+  - name: csi-preprovisioned
+    capacity: 50Gi
+    accessModes: [ReadWriteOnce]
+    storageClassName: gp3
+    csi:
+      driver: ebs.csi.aws.com
+      volumeHandle: vol-0123456789abcdef
+
+# Chart-level shared PVCs (referenced by multiple components)
+persistentVolumeClaims:
+  - name: shared-uploads
+    size: 20Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: efs-sc
+    labels:
+      backup: daily
+
+  - name: nfs-bound
+    size: 100Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: ""
+    volumeName: shared-nfs
+
+components:
+  web:
+    replicas: 2
+    containerPort: 80
+    persistence:
+      # Auto-created PVC (component-private cache)
+      - name: cache
+        size: 5Gi
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        mountPath: /var/cache
+      # Shared PVC from chart-level
+      - name: uploads
+        existingClaim: shared-uploads
+        mountPath: /var/www/uploads
+      # External PVC created outside the chart, read-only + subPath
+      - name: assets
+        existingClaim: external-assets
+        mountPath: /var/www/assets
+        readOnly: true
+        subPath: production
+    initContainers:
+      - name: chown-uploads
+        image: "busybox:latest"
+        command: "chown -R www-data:www-data /var/www/uploads"
+    additionalContainers:
+      - name: log-shipper
+        image: "fluent/fluent-bit:latest"
+        port: 2020
+
+  worker:
+    replicas: 3
+    command: "php artisan queue:work"
+    persistence:
+      # Same shared uploads volume as web
+      - name: uploads
+        existingClaim: shared-uploads
+        mountPath: /var/www/uploads
+
+  metrics:
+    replicas: 1
+    containerPort: 9090
+    persistence:
+      # Bind to a specific static PV
+      - name: nfs
+        existingClaim: nfs-bound
+        mountPath: /nfs
+
+  # Component without persistence still works
+  scheduler:
+    replicas: 1
+    command: "php artisan schedule:work"
+
+  # DigitalOcean pattern: RWO block storage + Recreate strategy
+  do-web:
+    replicas: 1
+    strategy:
+      type: Recreate
+    containerPort: 80
+    persistence:
+      - name: data
+        size: 10Gi
+        accessModes: [ReadWriteOnce]
+        storageClassName: do-block-storage
+        mountPath: /data

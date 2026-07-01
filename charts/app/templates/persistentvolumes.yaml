@@ -1,0 +1,57 @@
+{{- range .Values.persistentVolumes }}
+{{- if ne (.enabled | default true) false }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ required "persistentVolumes[].name is required" .name }}
+  labels:
+    {{- include "app.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: pv-{{ .name }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  capacity:
+    storage: {{ required "persistentVolumes[].capacity is required" .capacity }}
+  accessModes:
+    {{- toYaml (.accessModes | default (list "ReadWriteOnce")) | nindent 4 }}
+  persistentVolumeReclaimPolicy: {{ .reclaimPolicy | default "Retain" }}
+  {{- if .storageClassName }}
+  storageClassName: {{ .storageClassName }}
+  {{- end }}
+  {{- if .volumeMode }}
+  volumeMode: {{ .volumeMode }}
+  {{- end }}
+  {{- if .mountOptions }}
+  mountOptions:
+    {{- toYaml .mountOptions | nindent 4 }}
+  {{- end }}
+  {{- if .claimRef }}
+  claimRef:
+    {{- toYaml .claimRef | nindent 4 }}
+  {{- end }}
+  {{- if .nfs }}
+  nfs:
+    {{- toYaml .nfs | nindent 4 }}
+  {{- else if .hostPath }}
+  hostPath:
+    {{- toYaml .hostPath | nindent 4 }}
+  {{- else if .csi }}
+  csi:
+    {{- toYaml .csi | nindent 4 }}
+  {{- else if .local }}
+  local:
+    {{- toYaml .local | nindent 4 }}
+  {{- else if .source }}
+  {{- toYaml .source | nindent 2 }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,88 @@
+{{- /* Chart-level shared PersistentVolumeClaims */ -}}
+{{- range .Values.persistentVolumeClaims }}
+{{- if ne (.enabled | default true) false }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ required "persistentVolumeClaims[].name is required" .name }}
+  labels:
+    {{- include "app.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: pvc-{{ .name }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml (.accessModes | default (list "ReadWriteOnce")) | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ required "persistentVolumeClaims[].size is required" .size }}
+  {{- if hasKey . "storageClassName" }}
+  storageClassName: {{ .storageClassName | quote }}
+  {{- end }}
+  {{- if .volumeName }}
+  volumeName: {{ .volumeName }}
+  {{- end }}
+  {{- if .volumeMode }}
+  volumeMode: {{ .volumeMode }}
+  {{- end }}
+  {{- if .selector }}
+  selector:
+    {{- toYaml .selector | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{- /* Component-level auto-created PersistentVolumeClaims */ -}}
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- range $component.persistence }}
+{{- if not .existingClaim }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "app.componentPvcName" (dict "releaseName" $.Release.Name "componentName" $componentName "persistenceName" .name) }}
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml (.accessModes | default (list "ReadWriteOnce")) | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ required "components.*.persistence[].size is required (unless existingClaim is set)" .size }}
+  {{- if hasKey . "storageClassName" }}
+  storageClassName: {{ .storageClassName | quote }}
+  {{- end }}
+  {{- if .volumeName }}
+  volumeName: {{ .volumeName }}
+  {{- end }}
+  {{- if .volumeMode }}
+  volumeMode: {{ .volumeMode }}
+  {{- end }}
+  {{- if .selector }}
+  selector:
+    {{- toYaml .selector | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
