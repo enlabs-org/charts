@@ -160,6 +160,16 @@ global:
 #           requiredSpreadBy: ["kubernetes.io/hostname"]
 #       initContainers: []
 #       additionalContainers: []
+#       persistence:                 # list of volumes to mount
+#         - name: cache              # auto-created PVC: {release}-{component}-cache
+#           size: 5Gi
+#           accessModes: [ReadWriteOnce]
+#           storageClassName: gp3
+#           mountPath: /var/cache
+#         - name: uploads
+#           existingClaim: shared-uploads   # reference chart-level or external PVC
+#           mountPath: /var/www/uploads
+#           readOnly: false
 #
 #     worker:
 #       enabled: true
@@ -213,3 +223,113 @@ jobs: []
 #           memory: "64Mi"
 
 cronJobs: []
+
+# =============================================================================
+# PERSISTENT VOLUMES (chart-level, static provisioning)
+# =============================================================================
+# Cluster-scoped PersistentVolumes. Use only when you need static provisioning
+# (existing NFS export, pre-provisioned disk, hostPath for local dev).
+# For most cases prefer dynamic provisioning via StorageClass on a PVC.
+#
+# Example - NFS export:
+#   persistentVolumes:
+#     - name: shared-nfs
+#       capacity: 100Gi
+#       accessModes: [ReadWriteMany]
+#       storageClassName: ""            # empty = static, no dynamic provisioner
+#       reclaimPolicy: Retain           # default: Retain
+#       nfs:
+#         server: nfs.example.com
+#         path: /exports/shared
+#
+# Example - hostPath (local dev only):
+#   persistentVolumes:
+#     - name: local-data
+#       capacity: 10Gi
+#       accessModes: [ReadWriteOnce]
+#       hostPath:
+#         path: /data/local
+#
+# Example - fully custom source (CSI, iSCSI, etc):
+#   persistentVolumes:
+#     - name: csi-vol
+#       capacity: 50Gi
+#       accessModes: [ReadWriteOnce]
+#       csi:
+#         driver: ebs.csi.aws.com
+#         volumeHandle: vol-abc123
+
+persistentVolumes: []
+
+# =============================================================================
+# PERSISTENT VOLUME CLAIMS (chart-level, shared between components)
+# =============================================================================
+# Use for storage that multiple components need to share (RWX) or when you
+# want a PVC that is decoupled from a single component's lifecycle.
+# Reference from a component via `existingClaim: <name>`.
+#
+# Example - shared uploads directory across web and worker:
+#   persistentVolumeClaims:
+#     - name: shared-uploads
+#       size: 20Gi
+#       accessModes: [ReadWriteMany]
+#       storageClassName: efs-sc
+#
+#   components:
+#     web:
+#       persistence:
+#         - name: uploads
+#           existingClaim: shared-uploads
+#           mountPath: /var/www/uploads
+#     worker:
+#       persistence:
+#         - name: uploads
+#           existingClaim: shared-uploads
+#           mountPath: /var/www/uploads
+#
+# Example - bind to a specific static PV:
+#   persistentVolumeClaims:
+#     - name: nfs-claim
+#       size: 100Gi
+#       accessModes: [ReadWriteMany]
+#       storageClassName: ""            # must match the PV
+#       volumeName: shared-nfs          # bind explicitly to PV `shared-nfs`
+
+persistentVolumeClaims: []
+
+# =============================================================================
+# COMPONENT PERSISTENCE
+# =============================================================================
+# Component-level `persistence` is a list of volume mounts. Each entry either
+# auto-creates a PVC (default) or references an existing one via `existingClaim`.
+# Auto-created PVCs are named `{release}-{component}-{persistenceName}`.
+#
+# Example - per-component private storage (auto-created PVC):
+#   components:
+#     web:
+#       persistence:
+#         - name: cache
+#           size: 5Gi
+#           accessModes: [ReadWriteOnce]
+#           storageClassName: gp3
+#           mountPath: /var/cache
+#
+# Example - mount shared chart-level PVC:
+#   components:
+#     web:
+#       persistence:
+#         - name: uploads
+#           existingClaim: shared-uploads
+#           mountPath: /var/www/uploads
+#
+# Example - mount PVC that was created outside the chart:
+#   components:
+#     web:
+#       persistence:
+#         - name: legacy-data
+#           existingClaim: pre-existing-pvc
+#           mountPath: /data
+#           readOnly: true
+#           subPath: subdir
+#
+# Volumes are mounted into main container, initContainers, and additionalContainers.

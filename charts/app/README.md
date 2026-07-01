@@ -293,6 +293,154 @@ components:
 
 See [values-affinity.yaml](../../tests/app/values-affinity.yaml) for comprehensive examples.
 
+### Persistence (PersistentVolumes & PersistentVolumeClaims)
+
+The chart supports three complementary ways to use persistent storage:
+
+1. **Per-component PVC (auto-created)** — the common case. Component gets its own PVC dynamically provisioned by a `StorageClass`.
+2. **Chart-level shared PVC** — one PVC referenced by multiple components (typically `ReadWriteMany`).
+3. **Chart-level static PV** — cluster-scoped `PersistentVolume` for pre-provisioned storage (NFS, hostPath, CSI handle).
+
+Volumes are automatically mounted into main container, initContainers, and additionalContainers.
+
+#### Per-component persistence (auto-created PVC)
+
+```yaml
+components:
+  web:
+    persistence:
+      - name: cache             # PVC name: {release}-{component}-cache
+        size: 5Gi
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        mountPath: /var/cache
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `persistence[].name` | Volume name (also used to derive PVC name) | Required |
+| `persistence[].mountPath` | Container mount path | Required |
+| `persistence[].size` | Requested storage size | Required (unless `existingClaim`) |
+| `persistence[].accessModes` | Access modes | `[ReadWriteOnce]` |
+| `persistence[].storageClassName` | StorageClass to use | Cluster default |
+| `persistence[].subPath` | Mount a subpath | `""` |
+| `persistence[].readOnly` | Mount read-only | `false` |
+| `persistence[].existingClaim` | Reference an existing PVC (skips creation) | `null` |
+| `persistence[].volumeName` | Bind to a specific PV | `null` |
+| `persistence[].labels` / `.annotations` | Extra metadata on the created PVC | `{}` |
+
+#### Shared PVC between components
+
+```yaml
+persistentVolumeClaims:
+  - name: shared-uploads
+    size: 20Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: efs-sc
+
+components:
+  web:
+    persistence:
+      - name: uploads
+        existingClaim: shared-uploads
+        mountPath: /var/www/uploads
+  worker:
+    persistence:
+      - name: uploads
+        existingClaim: shared-uploads
+        mountPath: /var/www/uploads
+```
+
+#### Static PersistentVolume (NFS / hostPath / CSI)
+
+```yaml
+persistentVolumes:
+  - name: shared-nfs
+    capacity: 100Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: ""
+    reclaimPolicy: Retain
+    nfs:
+      server: nfs.example.com
+      path: /exports/shared
+
+persistentVolumeClaims:
+  - name: nfs-claim
+    size: 100Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: ""
+    volumeName: shared-nfs        # bind explicitly to the PV above
+```
+
+Supported source shortcuts on `persistentVolumes[]`: `nfs`, `hostPath`, `csi`, `local`. For any other source type use `source:` and provide raw K8s YAML.
+
+#### DigitalOcean Kubernetes (DOKS)
+
+DO Block Storage (`do-block-storage`) is **ReadWriteOnce only** — a volume is attached to exactly one node at a time. Plan accordingly:
+
+**Per-component private storage** (works out of the box):
+
+```yaml
+components:
+  web:
+    replicas: 1               # RWO: cannot scale replicas on the same PVC
+    strategy:
+      type: Recreate          # avoid attach conflicts on rolling updates
+    persistence:
+      - name: data
+        size: 10Gi
+        accessModes: [ReadWriteOnce]
+        storageClassName: do-block-storage
+        mountPath: /data
+```
+
+Notes:
+- Rolling updates with `ReadWriteOnce` can deadlock on volume attach — use `strategy.type: Recreate` unless the old pod fully terminates first.
+- Volumes are region-locked; combine with node affinity if you have multi-region node pools.
+
+**Shared storage across replicas / components (RWX)** — DO block storage does NOT support this. Options:
+
+1. **DO Spaces (S3-compatible)** — application-level, no PVC. Best fit for uploads, media, backups.
+2. **Self-hosted NFS server** — expose it via `persistentVolumes:` with `nfs:`.
+3. **Cluster storage add-ons** — install [Longhorn](https://longhorn.io/) or Rook-Ceph on top of DO block storage to get RWX.
+
+**NFS example on DO** (assumes an NFS server running in the cluster or a Droplet):
+
+```yaml
+persistentVolumes:
+  - name: uploads-nfs
+    capacity: 50Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: ""
+    reclaimPolicy: Retain
+    nfs:
+      server: 10.10.0.5       # private VPC IP of the NFS server
+      path: /exports/uploads
+
+persistentVolumeClaims:
+  - name: uploads
+    size: 50Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: ""
+    volumeName: uploads-nfs
+
+components:
+  web:
+    replicas: 3
+    persistence:
+      - name: uploads
+        existingClaim: uploads
+        mountPath: /var/www/uploads
+  worker:
+    replicas: 5
+    persistence:
+      - name: uploads
+        existingClaim: uploads
+        mountPath: /var/www/uploads
+```
+
+See [values-persistence.yaml](../../tests/app/values-persistence.yaml) for a full example covering all three patterns.
+
 ### Jobs and CronJobs
 
 Jobs are one-time executions:

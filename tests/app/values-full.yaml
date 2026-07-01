@@ -17,6 +17,12 @@ global:
     podAntiAffinity:
       preferredSpreadBy: ["kubernetes.io/hostname"]
 
+persistentVolumeClaims:
+  - name: shared-uploads
+    size: 20Gi
+    accessModes: [ReadWriteMany]
+    storageClassName: efs-sc
+
 components:
   web:
     enabled: true
@@ -91,6 +97,15 @@ components:
           requests:
             cpu: "50m"
             memory: "64Mi"
+    persistence:
+      - name: cache
+        size: 5Gi
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        mountPath: /var/cache
+      - name: uploads
+        existingClaim: shared-uploads
+        mountPath: /var/www/uploads
 
   worker:
     enabled: true

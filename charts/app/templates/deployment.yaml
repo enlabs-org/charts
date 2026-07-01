@@ -54,9 +54,14 @@ spec:
           env:
             {{- toYaml .env | nindent 12 }}
           {{- end }}
-          {{- if $.Values.global.useDatabaseCert }}
+          {{- if or $.Values.global.useDatabaseCert $component.persistence }}
           volumeMounts:
+            {{- if $.Values.global.useDatabaseCert }}
             {{- include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+            {{- end }}
+            {{- if $component.persistence }}
+            {{- include "app.persistenceVolumeMounts" $component.persistence | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- if .resources }}
           resources:
@@ -121,9 +126,14 @@ spec:
             periodSeconds: {{ $component.readinessProbe.periodSeconds | default 5 }}
           {{- end }}
           {{- end }}
-          {{- if $.Values.global.useDatabaseCert }}
+          {{- if or $.Values.global.useDatabaseCert $component.persistence }}
           volumeMounts:
+            {{- if $.Values.global.useDatabaseCert }}
             {{- include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+            {{- end }}
+            {{- if $component.persistence }}
+            {{- include "app.persistenceVolumeMounts" $component.persistence | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- if $component.resources }}
           resources:
@@ -152,18 +162,28 @@ spec:
           env:
             {{- toYaml .env | nindent 12 }}
           {{- end }}
-          {{- if $.Values.global.useDatabaseCert }}
+          {{- if or $.Values.global.useDatabaseCert $component.persistence }}
           volumeMounts:
+            {{- if $.Values.global.useDatabaseCert }}
             {{- include "app.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+            {{- end }}
+            {{- if $component.persistence }}
+            {{- include "app.persistenceVolumeMounts" $component.persistence | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- if .resources }}
           resources:
             {{- toYaml .resources | nindent 12 }}
           {{- end }}
         {{- end }}
-      {{- if $.Values.global.useDatabaseCert }}
+      {{- if or $.Values.global.useDatabaseCert $component.persistence }}
       volumes:
+        {{- if $.Values.global.useDatabaseCert }}
         {{- include "app.databaseCertVolume" $.Values.global | nindent 8 }}
+        {{- end }}
+        {{- if $component.persistence }}
+        {{- include "app.persistenceVolumes" (dict "releaseName" $.Release.Name "componentName" $componentName "persistence" $component.persistence) | nindent 8 }}
+        {{- end }}
       {{- end }}
 {{- end }}
 {{- end }}

@@ -18,6 +18,10 @@ template-app-affinity:
 	rm -rf .build/app
 	helm template test-app-affinity charts/app --output-dir=.build -f tests/app/values-affinity.yaml --debug
 
+template-app-persistence:
+	rm -rf .build/app
+	helm template test-app-persistence charts/app --output-dir=.build -f tests/app/values-persistence.yaml --debug
+
 template-metabase:
 	rm -rf .build/metabase
 	helm template test-metabase charts/metabase --output-dir=.build --debug
@@ -43,6 +47,7 @@ helm-template:
 	make template-stable-app
 	make template-app
 	make template-app-affinity
+	make template-app-persistence
 	make template-metabase
 	make template-adminer
 	make template-rbac
