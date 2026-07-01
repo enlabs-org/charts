@@ -26,8 +26,8 @@ spec:
     spec:
       containers:
         - name: n8n
-          image: {{ .Values.image }}
-          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          image: {{ include "n8n.image" . }}
+          imagePullPolicy: {{ include "n8n.imagePullPolicy" . }}
           {{ if .Values.envFromSecret }}
           envFrom:
             - secretRef:

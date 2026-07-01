@@ -66,10 +66,48 @@ ingress:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image` | n8n container image | `docker.n8n.io/n8nio/n8n` |
+| `image.repository` | n8n image repository | `docker.n8n.io/n8nio/n8n` |
+| `image.tag` | Image tag / version. Empty falls back to `Chart.appVersion` | `"latest"` |
+| `image.pullPolicy` | Image pull policy | `Always` |
 | `replicas` | Number of replicas | `1` |
-| `imagePullPolicy` | Image pull policy | `Always` |
 | `envFromSecret` | Secret name for environment variables | `null` |
+
+#### Selecting the n8n version / channel
+
+The chart splits image into `repository` + `tag` so you can independently pin the version and switch release channels.
+
+```yaml
+# Stable, pinned version
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "1.94.0"
+
+# Preview / next channel
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "next"
+
+# Rolling latest (not recommended for production)
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "latest"
+
+# Custom mirror / fork
+image:
+  repository: my-registry.example.com/n8nio/n8n
+  tag: "1.94.0-custom"
+```
+
+When `image.tag` is empty, the chart falls back to `Chart.appVersion` from `Chart.yaml`.
+
+**Legacy string format** is still supported for backward compatibility:
+
+```yaml
+image: "docker.n8n.io/n8nio/n8n:1.94.0"     # used verbatim
+imagePullPolicy: IfNotPresent                # top-level legacy field
+```
+
+If both formats are set, the object form wins.
 
 ### Persistence Settings
 
@@ -512,6 +550,7 @@ persistence:
 
 ## Version History
 
+- **1.2.0** - Split `image` into `image.repository` + `image.tag` + `image.pullPolicy` (legacy string form still supported); introduced `Chart.appVersion` as default tag
 - **1.1.0** - Added optional PersistentVolumeClaim support for `/home/node/.n8n`, with auto-`Recreate` strategy on RWO
 - **1.0.0** - Initial release
 

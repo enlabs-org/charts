@@ -1,8 +1,30 @@
 ---
 # Deployment
-image: 'docker.n8n.io/n8nio/n8n'
+
+# Container image. Supports two formats:
+#   1. Object (recommended):
+#      image:
+#        repository: docker.n8n.io/n8nio/n8n
+#        tag: "1.94.0"        # empty = uses Chart.appVersion
+#        pullPolicy: Always
+#   2. String (legacy, full image reference):
+#      image: "docker.n8n.io/n8nio/n8n:1.94.0"
+#
+# Common repositories / channels:
+#   - docker.n8n.io/n8nio/n8n            standard build
+#   - docker.n8n.io/n8nio/n8n:next       preview channel
+#   - docker.n8n.io/n8nio/n8n:latest     rolling latest
+#   - docker.n8n.io/n8nio/n8n:1.94.0     pinned version
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  # Default "latest". Pin to a specific version in production (e.g. "1.94.0").
+  # Empty falls back to Chart.appVersion.
+  tag: "latest"
+  pullPolicy: Always
+
 replicas: 1
-imagePullPolicy: 'Always'
+# Legacy top-level imagePullPolicy still honored if set; prefer image.pullPolicy.
+imagePullPolicy: null
 envFromSecret: null
 
 # Deployment strategy (optional). When persistence is enabled and this is
