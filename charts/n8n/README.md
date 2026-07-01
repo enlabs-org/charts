@@ -71,6 +71,42 @@ ingress:
 | `imagePullPolicy` | Image pull policy | `Always` |
 | `envFromSecret` | Secret name for environment variables | `null` |
 
+### Persistence Settings
+
+n8n stores workflows, credentials, the SQLite database (if used) and — critically — the **encryption key** in `/home/node/.n8n`. Even when you use an external Postgres/MySQL, losing this directory means losing the ability to decrypt stored credentials. **For any non-throwaway deployment enable persistence.**
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `persistence.enabled` | Create a PVC and mount `/home/node/.n8n` | `false` |
+| `persistence.size` | PVC size (ignored with `existingClaim`) | `10Gi` |
+| `persistence.accessModes` | PVC access modes | `[ReadWriteOnce]` |
+| `persistence.storageClassName` | StorageClass name; empty = cluster default | `null` |
+| `persistence.mountPath` | Mount path inside the container | `/home/node/.n8n` |
+| `persistence.existingClaim` | Use an existing PVC instead of creating one | `null` |
+| `persistence.annotations` | Annotations on the created PVC | `{}` |
+| `strategy` | Deployment strategy; auto-defaults to `Recreate` when persistence is enabled | `null` |
+
+When `persistence.enabled: true` and `strategy` is unset, the chart uses `strategy.type: Recreate`. This prevents `Multi-Attach` deadlocks with `ReadWriteOnce` volumes during redeploys. Explicitly set `strategy` to override.
+
+#### Example — DigitalOcean
+
+```yaml
+persistence:
+  enabled: true
+  size: 20Gi
+  accessModes: [ReadWriteOnce]
+  storageClassName: do-block-storage
+  # strategy: Recreate is applied automatically
+```
+
+#### Example — Use existing PVC
+
+```yaml
+persistence:
+  enabled: true
+  existingClaim: my-preprovisioned-n8n-pvc
+```
+
 ### Ingress Settings
 
 | Parameter | Description | Default |
@@ -452,14 +488,13 @@ kubectl create secret generic n8n-timezone \
 
 ### File Storage
 
-For file handling workflows:
+For file handling workflows, enable persistence (see [Persistence Settings](#persistence-settings)):
 
 ```yaml
-# Add persistent volume for file storage
 persistence:
   enabled: true
-  size: "50Gi"
-  storageClass: "standard"
+  size: 50Gi
+  storageClassName: standard
 ```
 
 ## Integration Examples
@@ -477,6 +512,7 @@ persistence:
 
 ## Version History
 
+- **1.1.0** - Added optional PersistentVolumeClaim support for `/home/node/.n8n`, with auto-`Recreate` strategy on RWO
 - **1.0.0** - Initial release
 
 ## Related Tools

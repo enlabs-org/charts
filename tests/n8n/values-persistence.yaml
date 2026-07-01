@@ -1,0 +1,23 @@
+---
+# Test values for n8n with persistence enabled
+# Simulates a DO Kubernetes production setup
+
+image: "docker.n8n.io/n8nio/n8n:latest"
+replicas: 1
+envFromSecret: n8n-config
+
+persistence:
+  enabled: true
+  size: 20Gi
+  accessModes: [ReadWriteOnce]
+  storageClassName: do-block-storage
+  mountPath: /home/node/.n8n
+  annotations:
+    backup: daily
+
+ingress:
+  enabled: true
+  host: "n8n.example.com"
+  tls: true
+  issueCertificate: true
+  whitelistSourceRange: "10.0.0.0/8"

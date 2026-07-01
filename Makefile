@@ -34,6 +34,10 @@ template-n8n:
 	rm -rf .build/n8n
 	helm template test-n8n charts/n8n --output-dir=.build --debug
 
+template-n8n-persistence:
+	rm -rf .build/n8n
+	helm template test-n8n-persistence charts/n8n --output-dir=.build -f tests/n8n/values-persistence.yaml --debug
+
 template-rbac:
 	rm -rf .build/rbac
 	helm template test-user charts/rbac --output-dir=.build -f tests/rbac/values.yaml --debug

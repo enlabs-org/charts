@@ -8,6 +8,14 @@ metadata:
 spec:
   replicas: {{ .Values.replicas }}
   revisionHistoryLimit: 3
+  {{- $strategy := .Values.strategy }}
+  {{- if and (not $strategy) .Values.persistence.enabled }}
+  {{- $strategy = dict "type" "Recreate" }}
+  {{- end }}
+  {{- if $strategy }}
+  strategy:
+    {{- toYaml $strategy | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -27,3 +35,14 @@ spec:
           {{ end }}
           ports:
             - containerPort: 5678
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath | default "/home/node/.n8n" }}
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default .Release.Name }}
+      {{- end }}
