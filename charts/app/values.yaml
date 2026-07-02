@@ -40,6 +40,27 @@ global:
   # Restart all pods on every deployment (adds random annotation)
   restartAfterRedeploy: false
 
+  # Pod-level security context - default for every component pod.
+  # Component-level `podSecurityContext` overrides this map (last-wins, not merged).
+  # Set component.podSecurityContext to null to disable the inherited default.
+  # Example:
+  #   podSecurityContext:
+  #     fsGroup: 1000              # PVC ownership fix on RWO volumes
+  #     runAsUser: 1000
+  #     runAsGroup: 1000
+  #     runAsNonRoot: true
+  podSecurityContext: {}
+
+  # Container-level security context - default for every container (main / init /
+  # additional / job / cronJob). Container-level override wins; null disables.
+  # Example (Pod Security Standard "restricted" baseline):
+  #   securityContext:
+  #     allowPrivilegeEscalation: false
+  #     readOnlyRootFilesystem: true
+  #     capabilities:
+  #       drop: [ALL]
+  securityContext: {}
+
   # Affinity rules for pod scheduling
   # Applied globally to all components unless overridden
   affinity:
@@ -95,7 +116,28 @@ global:
 #       image: "myapp-web:latest"
 #       replicas: 2
 #       containerPort: 80
+#       # command: null → uses the image's ENTRYPOINT/CMD unchanged.
+#       # String form is wrapped in `sh -c "..."` (kept for backward compat).
+#       # List form is passed through as a raw K8s `command:` array — the image
+#       # ENTRYPOINT is fully replaced (no shell), useful for images with exec-style
+#       # entrypoints. Combine with `args:` (list) to keep the image ENTRYPOINT and
+#       # only override CMD — the right choice for images with s6-overlay, tini, or
+#       # custom wrapper scripts (e.g. `args: [gateway, run]`).
 #       command: null
+#       args: []
+#       # Pod-level securityContext (fsGroup, runAsUser, runAsGroup, ...).
+#       # Overrides global.podSecurityContext; null disables the inherited default.
+#       podSecurityContext:
+#         fsGroup: 1000
+#         runAsNonRoot: true
+#       # Container-level securityContext for the main container. Overrides
+#       # global.securityContext; null disables. Init and additional containers
+#       # can each carry their own `securityContext` block.
+#       securityContext:
+#         allowPrivilegeEscalation: false
+#         readOnlyRootFilesystem: true
+#         capabilities:
+#           drop: [ALL]
 #       labels:
 #         app.example.com/scaling: "enabled"
 #         app.example.com/shutdown-outside-hours: "true"

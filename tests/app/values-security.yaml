@@ -1,0 +1,72 @@
+---
+# Security context + command/args test values.
+#
+# Demonstrates:
+#   - global.podSecurityContext + global.securityContext as defaults
+#   - component overrides (including null to disable inherited global)
+#   - per-initContainer / per-additionalContainer securityContext overrides
+#   - command as string (sh -c wrap, backward-compatible)
+#   - command as list (raw K8s command, ENTRYPOINT override without shell)
+#   - args (K8s CMD override; use with images that already have a proper ENTRYPOINT)
+
+global:
+  # Defaults applied to every pod / container unless a more specific override exists.
+  podSecurityContext:
+    fsGroup: 10000
+    runAsNonRoot: true
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: [ALL]
+
+components:
+  # Inherits global pod + container securityContext.
+  # Demonstrates `args:` (list) — image ENTRYPOINT stays alive, only CMD is overridden.
+  # Typical use case: images with s6-overlay / tini / wrapper scripts.
+  hermes:
+    image: "nousresearch/hermes-agent"
+    args: [gateway, run]
+    podSecurityContext:
+      # Overrides global; merged fields not supported (last-wins for the whole map).
+      fsGroup: 10000
+      runAsUser: 10000
+      runAsGroup: 10000
+      runAsNonRoot: true
+    persistence:
+      - name: data
+        size: 10Gi
+        mountPath: /opt/data
+
+  # Uses the raw list-form command — passed straight through to K8s `command:`,
+  # bypasses the sh -c wrap. ENTRYPOINT of the image is fully replaced.
+  worker:
+    image: "myapp-worker:latest"
+    command: ["/usr/local/bin/worker", "--queue", "default,high"]
+
+  # Legacy string command form still works — wrapped in `sh -c "..."`.
+  # Backward compatibility with all existing values files.
+  scheduler:
+    image: "myapp-worker:latest"
+    command: "php artisan schedule:work"
+
+  # Component-level override disables the inherited global by passing null.
+  # Container-level securityContext also nulled; the pod runs with cluster defaults.
+  privileged-adapter:
+    image: "legacy/adapter:1.0"
+    podSecurityContext: null
+    securityContext: null
+    initContainers:
+      # Init container needs root to fix ownership on a freshly-mounted PVC.
+      # Overrides the inherited global securityContext with its own.
+      - name: chown-data
+        image: "busybox:1.36"
+        command: "chown -R 10000:10000 /var/data"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+    additionalContainers:
+      - name: metrics
+        image: "prom/node-exporter:latest"
+        port: 9100
+        # Inherits global.securityContext (drop ALL caps, no priv escalation).

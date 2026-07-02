@@ -22,6 +22,10 @@ template-app-persistence:
 	rm -rf .build/app
 	helm template test-app-persistence charts/app --output-dir=.build -f tests/app/values-persistence.yaml --debug
 
+template-app-security:
+	rm -rf .build/app
+	helm template test-app-security charts/app --output-dir=.build -f tests/app/values-security.yaml --debug
+
 template-metabase:
 	rm -rf .build/metabase
 	helm template test-metabase charts/metabase --output-dir=.build --debug
@@ -38,6 +42,10 @@ template-n8n-persistence:
 	rm -rf .build/n8n
 	helm template test-n8n-persistence charts/n8n --output-dir=.build -f tests/n8n/values-persistence.yaml --debug
 
+template-n8n-security:
+	rm -rf .build/n8n
+	helm template test-n8n-security charts/n8n --output-dir=.build -f tests/n8n/values-security.yaml --debug
+
 template-rbac:
 	rm -rf .build/rbac
 	helm template test-user charts/rbac --output-dir=.build -f tests/rbac/values.yaml --debug
@@ -52,6 +60,7 @@ helm-template:
 	make template-app
 	make template-app-affinity
 	make template-app-persistence
+	make template-app-security
 	make template-metabase
 	make template-adminer
 	make template-rbac

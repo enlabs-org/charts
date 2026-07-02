@@ -27,6 +27,38 @@ replicas: 1
 imagePullPolicy: null
 envFromSecret: null
 
+# Container command / args override.
+# - command as string → wrapped in `sh -c "..."` (replaces ENTRYPOINT with a shell)
+# - command as list   → passed as raw K8s command (replaces ENTRYPOINT, no shell)
+# - args              → passed as K8s args (keeps ENTRYPOINT, overrides only CMD)
+# n8n image has a proper ENTRYPOINT — prefer `args:` if you only need to change CMD.
+# Example:
+#   args: ["start", "--tunnel"]
+command: null
+args: null
+
+# Pod-level securityContext (fsGroup / runAsUser / runAsGroup / runAsNonRoot / ...).
+# n8n runs as uid 1000 (node) inside the image. When persistence is enabled on a
+# block-storage CSI (DO / AWS EBS / GCP PD), the freshly-provisioned PVC is mounted
+# as root:root — set `fsGroup: 1000` here so the kubelet chowns it at mount time
+# and n8n can write. Empty map = no securityContext set on the pod.
+# Example:
+#   podSecurityContext:
+#     fsGroup: 1000
+#     runAsUser: 1000
+#     runAsGroup: 1000
+#     runAsNonRoot: true
+podSecurityContext: {}
+
+# Container-level securityContext for the n8n container.
+# Example (Pod Security Standard "restricted" baseline):
+#   securityContext:
+#     allowPrivilegeEscalation: false
+#     readOnlyRootFilesystem: false     # n8n writes to /home/node/.n8n
+#     capabilities:
+#       drop: [ALL]
+securityContext: {}
+
 # Deployment strategy (optional). When persistence is enabled and this is
 # unset, defaults to Recreate to avoid ReadWriteOnce attach conflicts during
 # rolling updates. Set explicitly to override.

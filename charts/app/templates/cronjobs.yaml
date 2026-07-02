@@ -22,12 +22,24 @@ spec:
       backoffLimit: {{ .backoffLimit | default 3 }}
       template:
         spec:
+          {{- with include "app.podSecurityContext" (dict "component" . "global" $.Values.global) }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
           containers:
             {{- $cronJobImage := .image | default $.Values.global.image }}
             - name: {{ .name }}
               image: {{ required "cronJobs[].image or global.image is required" $cronJobImage }}
               imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
-              command: ['sh', '-c', {{ required "cronJobs[].command is required" .command | quote }}]
+              {{- with include "app.securityContext" (dict "container" . "global" $.Values.global) }}
+              securityContext:
+                {{- . | nindent 16 }}
+              {{- end }}
+              {{- include "app.command" (required "cronJobs[].command is required" .command) | nindent 14 }}
+              {{- with .args }}
+              args:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
               {{- if .envFromSecret }}
               envFrom:
                 - secretRef:

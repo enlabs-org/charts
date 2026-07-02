@@ -217,6 +217,70 @@ The chart itself does **not** copy data from ephemeral storage into the new PVC 
 | `ingress.tlsSecretName` | Custom TLS secret name | `""` |
 | `ingress.whitelistSourceRange` | IP whitelist for access restriction | `null` |
 
+### Security Context
+
+Pod-level (`fsGroup`, `runAsUser`, `runAsGroup`, `runAsNonRoot`, …) and container-level (`capabilities`, `readOnlyRootFilesystem`, `allowPrivilegeEscalation`, …) security context.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `podSecurityContext` | Pod-level securityContext (applies to the whole pod) | `{}` |
+| `securityContext` | Container-level securityContext (applies to the n8n container) | `{}` |
+
+**Example — fix RWO PVC ownership with `fsGroup`:**
+
+n8n runs as uid 1000 inside the image. On block-storage CSI (DO, AWS EBS, GCP PD) a freshly-provisioned PVC is mounted as `root:root` — the container can't write to `/home/node/.n8n` and fails on startup. Set `fsGroup: 1000` and the kubelet chowns the volume at mount time. Standard fix, no initContainer needed.
+
+```yaml
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClassName: do-block-storage
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+```
+
+**Example — Pod Security Standard "restricted" baseline:**
+
+```yaml
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  # readOnlyRootFilesystem: n8n writes some caches under /home/node — keep false
+  # unless you separately mount emptyDir over the relevant paths.
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: [ALL]
+```
+
+### Container Command & Args
+
+Override the container command or its arguments.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `command` (string) | Wrapped in `sh -c "..."`. Replaces the image ENTRYPOINT with a shell. | `null` |
+| `command` (list) | Passed as raw K8s `command:` array. Replaces ENTRYPOINT, no shell. | `null` |
+| `args` (list) | Passed as K8s `args:`. **Keeps the image ENTRYPOINT** and overrides only CMD. | `null` |
+
+The n8n image has a proper ENTRYPOINT that sets up the runtime. Prefer `args:` if you only need to change the command passed to n8n — it preserves the image's init sequence.
+
+```yaml
+# Right — keeps ENTRYPOINT, only changes CMD:
+args: ["start", "--tunnel"]
+
+# Wrong — replaces ENTRYPOINT with a shell, skipping the image's init:
+command: "n8n start --tunnel"
+```
+
 ## Environment Configuration
 
 n8n supports extensive configuration through environment variables. Create a Kubernetes secret with your settings:

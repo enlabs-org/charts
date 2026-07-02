@@ -24,10 +24,30 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: n8n
           image: {{ include "n8n.image" . }}
           imagePullPolicy: {{ include "n8n.imagePullPolicy" . }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.command }}
+          {{- if kindIs "slice" . }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- else }}
+          command: ['sh', '-c', {{ . | quote }}]
+          {{- end }}
+          {{- end }}
+          {{- with .Values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{ if .Values.envFromSecret }}
           envFrom:
             - secretRef:

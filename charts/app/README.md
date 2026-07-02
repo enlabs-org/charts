@@ -10,7 +10,7 @@ This is the recommended chart for deploying applications with multiple component
 - **Auto-service creation** - Services are automatically created when `containerPort` or `ingress.enabled` is defined
 - **Global defaults** - Set common values like `image` and `host` globally, with per-component overrides
 - **Pod scheduling control** - Node affinity, pod affinity, and pod anti-affinity with simplified shortcuts
-- **Security features** - IP whitelisting, security path filters, basic auth support
+- **Security features** - IP whitelisting, security path filters, basic auth support, pod/container `securityContext`
 - **Resource management** - Per-component resource limits, Pod Disruption Budgets
 - **Job support** - One-time jobs and scheduled cron jobs
 - **Ingress with TLS** - NGINX ingress with automatic TLS via cert-manager and Let's Encrypt
@@ -523,6 +523,125 @@ components:
         username: "admin"
         password: "secretpassword"
 ```
+
+### Pod & Container Security Context
+
+Set pod-level (`fsGroup`, `runAsUser`, `runAsGroup`, `runAsNonRoot`, …) and container-level (`capabilities`, `readOnlyRootFilesystem`, `allowPrivilegeEscalation`, …) security context. Both support global defaults with component-level overrides (same pattern as affinity / securityPathFilter).
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `global.podSecurityContext` | Default pod-level securityContext for every component | `{}` |
+| `global.securityContext` | Default container-level securityContext for every container | `{}` |
+| `components.<name>.podSecurityContext` | Overrides `global.podSecurityContext`. Set to `null` to disable the inherited default | inherits global |
+| `components.<name>.securityContext` | Overrides `global.securityContext` on the main container | inherits global |
+| `initContainers[].securityContext` | Overrides `global.securityContext` on an init container | inherits global |
+| `additionalContainers[].securityContext` | Overrides `global.securityContext` on a sidecar container | inherits global |
+| `jobs[].securityContext` / `jobs[].podSecurityContext` | Same semantics for Jobs | inherits global |
+| `cronJobs[].securityContext` / `cronJobs[].podSecurityContext` | Same semantics for CronJobs | inherits global |
+
+**Example — Pod Security Standard "restricted" baseline for the whole release:**
+
+```yaml
+global:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+
+components:
+  web:
+    # inherits global — no override needed
+```
+
+**Example — fix RWO PVC ownership with `fsGroup`:**
+
+On block-storage CSI drivers (DO, AWS EBS, GCP PD) a freshly-provisioned PVC is mounted as `root:root` (mode 755). Non-root containers can't write. Setting `fsGroup` tells the kubelet to recursively `chown` the volume to that GID at mount time — the standard fix, avoids initContainer chown hacks.
+
+```yaml
+components:
+  hermes:
+    image: nousresearch/hermes-agent
+    podSecurityContext:
+      fsGroup: 10000               # matches the image's runtime user GID
+    persistence:
+      - name: data
+        size: 10Gi
+        accessModes: [ReadWriteOnce]
+        storageClassName: do-block-storage
+        mountPath: /opt/data
+```
+
+**Example — an init container needs root to run `chown`, main container drops privileges:**
+
+```yaml
+components:
+  legacy:
+    image: legacy/app:1.0
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+    initContainers:
+      - name: chown-legacy-data
+        image: busybox:1.36
+        command: "chown -R 1000:1000 /var/data"
+        # Override the inherited security context: this init needs to run as root.
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          runAsNonRoot: false
+```
+
+**Disabling an inherited default** — set the field to `null` explicitly:
+
+```yaml
+global:
+  securityContext:
+    readOnlyRootFilesystem: true
+
+components:
+  needs-writable-rootfs:
+    securityContext: null          # opts out entirely
+```
+
+### Container Command & Args
+
+The chart supports three ways to control what a container runs:
+
+| Form | K8s field mapping | Effect on image ENTRYPOINT |
+|------|-------------------|----------------------------|
+| `command: "cmd with args"` (string) | `command: ['sh', '-c', "cmd with args"]` | Replaces ENTRYPOINT with a shell |
+| `command: [foo, bar]` (list) | `command: [foo, bar]` | Replaces ENTRYPOINT (no shell) |
+| `args: [foo, bar]` (list) | `args: [foo, bar]` | Keeps ENTRYPOINT, overrides CMD |
+
+**When to use which:**
+
+- **String `command:`** — legacy default. Convenient for `php artisan queue:work`-style commands where you want shell features (env expansion, `&&`, redirection). Wrapped in `sh -c "..."` so `ENTRYPOINT` is replaced.
+- **List `command:`** — when you want the exec form (no shell) but still fully replace `ENTRYPOINT`. Rarely needed.
+- **`args:`** — the right choice for images that already have a proper `ENTRYPOINT` you want to keep: s6-overlay, tini, dumb-init, or any wrapper script that sets up the environment before starting the app. Overrides only `CMD`, so the image's init sequence still runs.
+
+**Example — image with s6-overlay ENTRYPOINT that must run before the app command:**
+
+```yaml
+components:
+  hermes:
+    image: nousresearch/hermes-agent
+    # Wrong: `command: "gateway run"` would replace /init (s6-overlay), skipping
+    # ownership fix hooks and losing the supervision tree.
+    # Right: keep /init, only override CMD.
+    args: [gateway, run]
+```
+
+Fields available on every container spec (main / init / additional / jobs / cronJobs): `command` (string or list), `args` (list), `securityContext`.
 
 ## Advanced Features
 

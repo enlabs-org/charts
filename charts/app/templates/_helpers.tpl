@@ -292,6 +292,75 @@ Returns the resolved securityPathFilter config as YAML, or empty string if disab
 {{- end }}
 
 {{/*
+Pod-level securityContext resolver.
+Component-level `podSecurityContext` overrides `global.podSecurityContext`.
+An explicit null on the component disables the inherited global value.
+Usage: {{ include "app.podSecurityContext" (dict "component" $component "global" $.Values.global) }}
+Returns YAML of the merged/chosen securityContext, or empty string when nothing applies.
+*/}}
+{{- define "app.podSecurityContext" -}}
+{{- $ctx := dict }}
+{{- if .global.podSecurityContext }}
+{{- $ctx = .global.podSecurityContext }}
+{{- end }}
+{{- if hasKey .component "podSecurityContext" }}
+{{- if .component.podSecurityContext }}
+{{- $ctx = .component.podSecurityContext }}
+{{- else }}
+{{- $ctx = dict }}
+{{- end }}
+{{- end }}
+{{- if $ctx }}
+{{- toYaml $ctx }}
+{{- end }}
+{{- end }}
+
+{{/*
+Container-level securityContext resolver.
+Per-container `securityContext` overrides `global.securityContext`.
+An explicit null on the container disables the inherited global value.
+Usage: {{ include "app.securityContext" (dict "container" $container "global" $.Values.global) }}
+Where $container is a component (main), initContainer, additionalContainer, job or cronJob entry.
+Returns YAML of the merged/chosen securityContext, or empty string when nothing applies.
+*/}}
+{{- define "app.securityContext" -}}
+{{- $ctx := dict }}
+{{- if .global.securityContext }}
+{{- $ctx = .global.securityContext }}
+{{- end }}
+{{- if hasKey .container "securityContext" }}
+{{- if .container.securityContext }}
+{{- $ctx = .container.securityContext }}
+{{- else }}
+{{- $ctx = dict }}
+{{- end }}
+{{- end }}
+{{- if $ctx }}
+{{- toYaml $ctx }}
+{{- end }}
+{{- end }}
+
+{{/*
+Container command renderer.
+Backward-compatible with the existing string form (wrapped in `sh -c "..."`),
+plus a new list form that is passed straight through as a K8s command array
+(does NOT replace ENTRYPOINT via a shell). Use the list form together with
+`args:` when the container image already has a proper ENTRYPOINT (s6-overlay,
+tini, wrapper scripts, etc.) and you only want to override the CMD.
+Usage: {{ include "app.command" $cmd | nindent 12 }}
+*/}}
+{{- define "app.command" -}}
+{{- if kindIs "slice" . }}
+command:
+{{- range . }}
+  - {{ . | quote }}
+{{- end }}
+{{- else }}
+command: ['sh', '-c', {{ . | quote }}]
+{{- end }}
+{{- end }}
+
+{{/*
 Check if ingress class is traefik
 Usage: {{ include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
 Returns "true" if traefik, empty string otherwise.
