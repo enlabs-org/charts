@@ -66,10 +66,144 @@ ingress:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image` | n8n container image | `docker.n8n.io/n8nio/n8n` |
+| `image.repository` | n8n image repository | `docker.n8n.io/n8nio/n8n` |
+| `image.tag` | Image tag / version. Empty falls back to `Chart.appVersion` | `"latest"` |
+| `image.pullPolicy` | Image pull policy | `Always` |
 | `replicas` | Number of replicas | `1` |
-| `imagePullPolicy` | Image pull policy | `Always` |
 | `envFromSecret` | Secret name for environment variables | `null` |
+
+#### Selecting the n8n version / channel
+
+The chart splits image into `repository` + `tag` so you can independently pin the version and switch release channels.
+
+```yaml
+# Stable, pinned version
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "1.94.0"
+
+# Preview / next channel
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "next"
+
+# Rolling latest (not recommended for production)
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "latest"
+
+# Custom mirror / fork
+image:
+  repository: my-registry.example.com/n8nio/n8n
+  tag: "1.94.0-custom"
+```
+
+When `image.tag` is empty, the chart falls back to `Chart.appVersion` from `Chart.yaml`.
+
+**Legacy string format** is still supported for backward compatibility:
+
+```yaml
+image: "docker.n8n.io/n8nio/n8n:1.94.0"     # used verbatim
+imagePullPolicy: IfNotPresent                # top-level legacy field
+```
+
+If both formats are set, the object form wins.
+
+### Persistence Settings
+
+n8n stores workflows, credentials, the SQLite database (if used) and — critically — the **encryption key** in `/home/node/.n8n`. Even when you use an external Postgres/MySQL, losing this directory means losing the ability to decrypt stored credentials. **For any non-throwaway deployment enable persistence.**
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `persistence.enabled` | Create a PVC and mount `/home/node/.n8n` | `false` |
+| `persistence.size` | PVC size (ignored with `existingClaim`) | `10Gi` |
+| `persistence.accessModes` | PVC access modes | `[ReadWriteOnce]` |
+| `persistence.storageClassName` | StorageClass name; empty = cluster default | `null` |
+| `persistence.mountPath` | Mount path inside the container | `/home/node/.n8n` |
+| `persistence.existingClaim` | Use an existing PVC instead of creating one | `null` |
+| `persistence.annotations` | Annotations on the created PVC | `{}` |
+| `strategy` | Deployment strategy; auto-defaults to `Recreate` when persistence is enabled | `null` |
+
+When `persistence.enabled: true` and `strategy` is unset, the chart uses `strategy.type: Recreate`. This prevents `Multi-Attach` deadlocks with `ReadWriteOnce` volumes during redeploys. Explicitly set `strategy` to override.
+
+#### Example — DigitalOcean
+
+```yaml
+persistence:
+  enabled: true
+  size: 20Gi
+  accessModes: [ReadWriteOnce]
+  storageClassName: do-block-storage
+  # strategy: Recreate is applied automatically
+```
+
+#### Example — Use existing PVC
+
+```yaml
+persistence:
+  enabled: true
+  existingClaim: my-preprovisioned-n8n-pvc
+```
+
+#### Migrating an existing deployment to persistent storage
+
+**⚠️ Warning — enabling persistence on a running n8n WILL wipe its data unless you migrate manually.**
+
+When you flip `persistence.enabled` from `false` to `true` and run `helm upgrade`:
+
+1. The chart creates an empty PVC.
+2. The Deployment strategy switches to `Recreate` (auto).
+3. The old pod terminates → its ephemeral filesystem (including `/home/node/.n8n`) is gone.
+4. A new pod starts, mounts the empty PVC, and n8n bootstraps fresh.
+
+**What gets lost:**
+
+| Setup | Data at risk |
+|-------|--------------|
+| SQLite (default DB) | All workflows, executions, users, credentials |
+| External Postgres / MySQL | Workflows and users survive, **but the encryption key in `/home/node/.n8n/config` is lost — all encrypted credentials in the DB become unreadable** |
+| Any setup | Custom node modules installed at runtime, `.n8n/nodes`, custom binary data |
+
+**Safe migration procedure:**
+
+```bash
+# 1. Back up the current .n8n directory from the running pod
+kubectl exec deploy/n8n -- tar czf - -C /home/node .n8n > n8n-backup.tar.gz
+
+# 2. (belt & suspenders) Save the encryption key separately
+kubectl exec deploy/n8n -- cat /home/node/.n8n/config | grep encryptionKey
+#    → store this value in a password manager
+
+# 3. Apply the chart with persistence enabled
+helm upgrade n8n enlabs-org/n8n \
+  --set persistence.enabled=true \
+  --set persistence.size=20Gi \
+  --set persistence.storageClassName=do-block-storage
+
+# 4. Wait for the new pod to come up on the (empty) PVC
+kubectl rollout status deploy/n8n
+
+# 5. Restore the backup into the new pod's mounted PVC
+kubectl exec -i deploy/n8n -- tar xzf - -C /home/node < n8n-backup.tar.gz
+
+# 6. Restart n8n so it picks up the restored files
+kubectl rollout restart deploy/n8n
+
+# 7. Verify: log in, open a workflow, run a test execution
+```
+
+Downtime is ~30-60 seconds. Zero data loss.
+
+**When you can skip migration:**
+
+- Fresh install — nothing to lose yet.
+- Test / disposable deployment with no important workflows or credentials.
+
+**When it's OK-ish to skip but risky:**
+
+- External DB and you're willing to re-enter every credential in every workflow (the encryption key is gone).
+
+The chart itself does **not** copy data from ephemeral storage into the new PVC — that's a manual step by design, since the chart has no way to safely detect what's worth preserving.
 
 ### Ingress Settings
 
@@ -452,14 +586,13 @@ kubectl create secret generic n8n-timezone \
 
 ### File Storage
 
-For file handling workflows:
+For file handling workflows, enable persistence (see [Persistence Settings](#persistence-settings)):
 
 ```yaml
-# Add persistent volume for file storage
 persistence:
   enabled: true
-  size: "50Gi"
-  storageClass: "standard"
+  size: 50Gi
+  storageClassName: standard
 ```
 
 ## Integration Examples
@@ -477,6 +610,8 @@ persistence:
 
 ## Version History
 
+- **1.2.0** - Split `image` into `image.repository` + `image.tag` + `image.pullPolicy` (legacy string form still supported); introduced `Chart.appVersion` as default tag
+- **1.1.0** - Added optional PersistentVolumeClaim support for `/home/node/.n8n`, with auto-`Recreate` strategy on RWO
 - **1.0.0** - Initial release
 
 ## Related Tools

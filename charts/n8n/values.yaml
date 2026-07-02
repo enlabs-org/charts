@@ -1,9 +1,57 @@
 ---
 # Deployment
-image: 'docker.n8n.io/n8nio/n8n'
+
+# Container image. Supports two formats:
+#   1. Object (recommended):
+#      image:
+#        repository: docker.n8n.io/n8nio/n8n
+#        tag: "1.94.0"        # empty = uses Chart.appVersion
+#        pullPolicy: Always
+#   2. String (legacy, full image reference):
+#      image: "docker.n8n.io/n8nio/n8n:1.94.0"
+#
+# Common repositories / channels:
+#   - docker.n8n.io/n8nio/n8n            standard build
+#   - docker.n8n.io/n8nio/n8n:next       preview channel
+#   - docker.n8n.io/n8nio/n8n:latest     rolling latest
+#   - docker.n8n.io/n8nio/n8n:1.94.0     pinned version
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  # Default "latest". Pin to a specific version in production (e.g. "1.94.0").
+  # Empty falls back to Chart.appVersion.
+  tag: "latest"
+  pullPolicy: Always
+
 replicas: 1
-imagePullPolicy: 'Always'
+# Legacy top-level imagePullPolicy still honored if set; prefer image.pullPolicy.
+imagePullPolicy: null
 envFromSecret: null
+
+# Deployment strategy (optional). When persistence is enabled and this is
+# unset, defaults to Recreate to avoid ReadWriteOnce attach conflicts during
+# rolling updates. Set explicitly to override.
+# Example:
+#   strategy:
+#     type: RollingUpdate
+strategy: null
+
+# Persistence for /home/node/.n8n (workflows, credentials, SQLite DB, encryption key)
+# n8n stores critical data here even when using external Postgres/MySQL.
+# For production always enable persistence.
+persistence:
+  enabled: false
+  # Use existing PVC instead of creating a new one
+  existingClaim: null
+  # PVC size (ignored when existingClaim is set)
+  size: 10Gi
+  # Access modes (ignored when existingClaim is set)
+  accessModes: [ReadWriteOnce]
+  # StorageClass (ignored when existingClaim is set). Empty = cluster default.
+  storageClassName: null
+  # Mount path inside the container
+  mountPath: /home/node/.n8n
+  # Extra annotations on the created PVC
+  annotations: {}
 
 # Ingress
 ingress:
