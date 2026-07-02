@@ -13,6 +13,14 @@ global:
   labels:
     app.example.com/environment: "staging"
     app.example.com/team: "platform"
+  podSecurityContext:
+    fsGroup: 1000
+    runAsNonRoot: true
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: [ALL]
   affinity:
     podAntiAffinity:
       preferredSpreadBy: ["kubernetes.io/hostname"]
@@ -112,6 +120,13 @@ components:
     image: "myapp-worker:v1.0.0"
     replicas: 5
     command: "php artisan queue:work --queue=high,default"
+    # Component-level securityContext override (drops the capability drop from global
+    # while keeping the rest). Container-level override.
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: [ALL]
     labels:
       app.example.com/scaling: "aggressive"
     resources:

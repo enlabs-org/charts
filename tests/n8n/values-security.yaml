@@ -1,0 +1,36 @@
+---
+# Security context + command/args test values for n8n chart.
+#
+# Demonstrates:
+#   - podSecurityContext (fsGroup fixes RWO PVC ownership on DO / EBS / GCP PD)
+#   - securityContext at container level (PSS restricted baseline)
+#   - args (list) — overrides only CMD, preserves the image's ENTRYPOINT
+
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "latest"
+
+replicas: 1
+
+persistence:
+  enabled: true
+  size: 10Gi
+  accessModes: [ReadWriteOnce]
+  storageClassName: do-block-storage
+  mountPath: /home/node/.n8n
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: [ALL]
+
+# Overrides only the CMD — image ENTRYPOINT (`tini -- /docker-entrypoint.sh`)
+# stays intact so runtime setup still happens before n8n starts.
+args: ["start", "--tunnel"]

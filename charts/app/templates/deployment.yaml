@@ -31,6 +31,10 @@ spec:
         {{- . | nindent 8 }}
         {{- end }}
     spec:
+      {{- with include "app.podSecurityContext" (dict "component" $component "global" $.Values.global) }}
+      securityContext:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with include "app.affinity" (dict "root" $ "componentName" $componentName "component" $component) }}
       affinity:
         {{- . | nindent 8 }}
@@ -42,8 +46,16 @@ spec:
         - name: {{ .name }}
           image: {{ required "initContainer.image or global.image is required" $initImage }}
           imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
+          {{- with include "app.securityContext" (dict "container" . "global" $.Values.global) }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
           {{- if .command }}
-          command: ['sh', '-c', {{ .command | quote }}]
+          {{- include "app.command" .command | nindent 10 }}
+          {{- end }}
+          {{- with .args }}
+          args:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- if .envFromSecret }}
           envFrom:
@@ -76,8 +88,16 @@ spec:
         - name: {{ $componentName }}
           image: {{ required (printf "components.%s.image or global.image is required" $componentName) $componentImage }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          {{- with include "app.securityContext" (dict "container" $component "global" $.Values.global) }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
           {{- if $component.command }}
-          command: ['sh', '-c', {{ $component.command | quote }}]
+          {{- include "app.command" $component.command | nindent 10 }}
+          {{- end }}
+          {{- with $component.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- if $component.containerPort }}
           ports:
@@ -144,8 +164,16 @@ spec:
         - name: {{ .name }}
           image: {{ required "additionalContainer.image is required" .image }}
           imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
+          {{- with include "app.securityContext" (dict "container" . "global" $.Values.global) }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
           {{- if .command }}
-          command: ['sh', '-c', {{ .command | quote }}]
+          {{- include "app.command" .command | nindent 10 }}
+          {{- end }}
+          {{- with .args }}
+          args:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- if .port }}
           ports:
