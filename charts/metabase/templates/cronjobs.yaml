@@ -1,0 +1,50 @@
+{{- range .Values.cronJobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $.Release.Name }}-{{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "metabase.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: cronjob-{{ .name }}
+    {{- with include "metabase.customLabels" (dict "global" $.Values.global) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  schedule: {{ required "cronJobs[].schedule is required" .schedule | quote }}
+  concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .backoffLimit | default 3 }}
+      template:
+        spec:
+          containers:
+            {{- $cronJobImage := .image | default $.Values.global.image }}
+            - name: {{ .name }}
+              image: {{ required "cronJobs[].image or global.image is required" $cronJobImage }}
+              imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+              command: ['sh', '-c', {{ required "cronJobs[].command is required" .command | quote }}]
+              {{- if .envFromSecret }}
+              envFrom:
+                - secretRef:
+                    name: {{ .envFromSecret }}
+              {{- end }}
+              {{- if .env }}
+              env:
+                {{- toYaml .env | nindent 16 }}
+              {{- end }}
+              {{- if .resources }}
+              resources:
+                {{- toYaml .resources | nindent 16 }}
+              {{- end }}
+              {{- if $.Values.global.useDatabaseCert }}
+              volumeMounts:
+                {{- include "metabase.databaseCertVolumeMount" $.Values.global | nindent 16 }}
+              {{- end }}
+          restartPolicy: {{ .restartPolicy | default "OnFailure" }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumes:
+            {{- include "metabase.databaseCertVolume" $.Values.global | nindent 12 }}
+          {{- end }}
+{{- end }}

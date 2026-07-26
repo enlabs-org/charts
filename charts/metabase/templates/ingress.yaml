@@ -1,37 +1,98 @@
-{{ if .Values.ingress.enabled }}
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.ingress }}
+{{- if $component.ingress.enabled }}
+{{- $ingressHost := $component.ingress.host | default $.Values.global.host }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "metabase.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "metabase.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
   annotations:
-    {{ if .Values.ingress.issueCertificate }}
-    cert-manager.io/cluster-issuer: {{ .Values.ingress.clusterIssuer }}
-    {{ end }}
+    {{- if $component.ingress.wwwRedirect }}
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    {{- end }}
+    {{- if $component.ingress.issueCertificate }}
+    cert-manager.io/cluster-issuer: {{ $component.ingress.clusterIssuer | default "letsencrypt" }}
+    {{- end }}
+    {{- if $component.ingress.basicAuth }}
+    {{- if $component.ingress.basicAuth.enabled }}
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    {{- end }}
+    {{- end }}
+    {{- if $component.ingress.proxyBodySize }}
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ $component.ingress.proxyBodySize | quote }}
+    {{- end }}
+    {{- /* IP Whitelist for VPN restriction */}}
+    {{- if $component.ingress.whitelistSourceRange }}
+    nginx.ingress.kubernetes.io/whitelist-source-range: {{ $component.ingress.whitelistSourceRange | quote }}
+    {{- /* Allow ACME challenge to bypass whitelist when TLS is enabled */}}
+    {{- if $component.ingress.tls }}
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      location /.well-known/acme-challenge/ {
+        allow all;
+      }
+    {{- end }}
+    {{- end }}
+    {{- /* Security path filter via server-snippet */}}
+    {{- if $component.ingress.securityPathFilter }}
+    {{- if $component.ingress.securityPathFilter.enabled }}
+    nginx.ingress.kubernetes.io/server-snippet: |
+      {{- range $component.ingress.securityPathFilter.blockedPaths }}
+      location ~* ^{{ . }} {
+          deny all;
+          return 404;
+      }
+      {{- end }}
+    {{- end }}
+    {{- end }}
 spec:
   ingressClassName: nginx
-  {{ if .Values.ingress.tls }}
+  {{- if $component.ingress.tls }}
   tls:
     - hosts:
-        - {{ .Values.ingress.host }}
-    {{ if .Values.ingress.tlsSecretName }}
-      secretName: {{ .Values.ingress.tlsSecretName}}
-    {{ else }}
-      secretName: {{ .Release.Name }}-tls
-    {{ end }}
-  {{ end }}
-
+        - {{ $ingressHost }}
+        {{- if $component.ingress.wwwRedirect }}
+        - www.{{ $ingressHost }}
+        {{- end }}
+      {{- if $component.ingress.tlsSecretName }}
+      secretName: {{ $component.ingress.tlsSecretName }}
+      {{- else }}
+      secretName: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-tls
+      {{- end }}
+  {{- end }}
   rules:
-
-    - host: {{ .Values.ingress.host }}
+    - host: {{ $ingressHost }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
                 port:
-                  name: app
-{{ end }}
+                  name: http
+          {{- if $component.ingress.wwwRedirect }}
+    - host: www.{{ $ingressHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+                port:
+                  name: http
+          {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

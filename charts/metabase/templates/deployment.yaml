@@ -1,47 +1,160 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "metabase.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  namespace: {{ $.Release.Namespace }}
   labels:
-    environment: {{ .Release.Name }}
+    {{- include "metabase.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "metabase.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ $component.replicas | default 1 }}
   revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "metabase.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 6 }}
   template:
     metadata:
+      annotations:
+        {{- if $.Values.global.restartAfterRedeploy }}
+        rollme: {{ randAlphaNum 5 | quote }}
+        {{- end }}
       labels:
-        app: {{ .Release.Name }}
+        {{- include "metabase.componentSelectorLabels" (dict "root" $ "componentName" $componentName) | nindent 8 }}
+        {{- with include "metabase.customLabels" (dict "global" $.Values.global "component" $component) }}
+        {{- . | nindent 8 }}
+        {{- end }}
     spec:
-      containers:
-        - name: metabase
-          image: {{ .Values.image }}
-          imagePullPolicy: {{ .Values.imagePullPolicy }}
-          ports:
-            - containerPort: 3000
+      {{- if $component.initContainers }}
+      initContainers:
+        {{- range $component.initContainers }}
+        - name: {{ .name }}
+          image: {{ required "initContainer.image is required" .image }}
+          imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
+          {{- if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+          {{- end }}
+          {{- if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+          {{- end }}
+          {{- if .env }}
           env:
-            - name: MB_DB_TYPE
-              value: {{ .Values.database.type | quote }}
-            {{- if .Values.database.host }}
-            - name: MB_DB_HOST
-              value: {{ .Values.database.host | quote }}
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "metabase.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      containers:
+        {{- $componentImage := $component.image | default $.Values.global.image }}
+        {{- $componentHost := ($component.ingress).host | default $.Values.global.host }}
+        - name: {{ $componentName }}
+          image: {{ required (printf "components.%s.image or global.image is required" $componentName) $componentImage }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          {{- if $component.command }}
+          command: ['sh', '-c', {{ $component.command | quote }}]
+          {{- end }}
+          {{- if $component.containerPort }}
+          ports:
+            - name: http
+              containerPort: {{ $component.containerPort }}
+              protocol: TCP
+          {{- end }}
+          {{- with include "metabase.envFromSecret" (dict "component" $component "global" $.Values.global) }}
+          envFrom:
+            - secretRef:
+                name: {{ . }}
+          {{- end }}
+          env:
+            - name: IMAGE
+              value: {{ $componentImage | quote }}
+            {{- if $component.env }}
+            {{- toYaml $component.env | nindent 12 }}
             {{- end }}
-            {{- if .Values.database.port }}
-            - name: MB_DB_PORT
-              value: {{ .Values.database.port | quote }}
-            {{- end }}
-            {{- if .Values.database.user }}
-            - name: MB_DB_USER
-              value: {{ .Values.database.user | quote }}
-            {{- end }}
-            {{- if .Values.database.password }}
-            - name: MB_DB_PASS
-              value: {{ .Values.database.password | quote }}
-            {{- end }}
-            {{- if .Values.database.name }}
-            - name: MB_DB_DBNAME
-              value: {{ .Values.database.name | quote }}
-            {{- end }}
+          {{- if $component.livenessProbe }}
+          {{- if and (ne ($component.livenessProbe.enabled | default true) false) $component.livenessProbe.httpGet }}
+          livenessProbe:
+            httpGet:
+              path: {{ $component.livenessProbe.httpGet.path | default "/" }}
+              port: {{ $component.livenessProbe.httpGet.port | default "http" }}
+              {{- if $componentHost }}
+              httpHeaders:
+                - name: Host
+                  value: {{ $componentHost }}
+              {{- end }}
+            initialDelaySeconds: {{ $component.livenessProbe.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ $component.livenessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ $component.livenessProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $component.livenessProbe.failureThreshold | default 3 }}
+          {{- end }}
+          {{- end }}
+          {{- if $component.readinessProbe }}
+          {{- if and (ne ($component.readinessProbe.enabled | default true) false) $component.readinessProbe.httpGet }}
+          readinessProbe:
+            httpGet:
+              path: {{ $component.readinessProbe.httpGet.path | default "/" }}
+              port: {{ $component.readinessProbe.httpGet.port | default "http" }}
+              {{- if $componentHost }}
+              httpHeaders:
+                - name: Host
+                  value: {{ $componentHost }}
+              {{- end }}
+            initialDelaySeconds: {{ $component.readinessProbe.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ $component.readinessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ $component.readinessProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $component.readinessProbe.failureThreshold | default 3 }}
+          {{- end }}
+          {{- end }}
+          {{- if $component.resources }}
+          resources:
+            {{- toYaml $component.resources | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "metabase.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+        {{- if $component.additionalContainers }}
+        {{- range $component.additionalContainers }}
+        - name: {{ .name }}
+          image: {{ required "additionalContainer.image is required" .image }}
+          imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
+          {{- if .command }}
+          command: ['sh', '-c', {{ .command | quote }}]
+          {{- end }}
+          {{- if .envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .envFromSecret }}
+          {{- end }}
+          {{- if .env }}
+          env:
+            {{- toYaml .env | nindent 12 }}
+          {{- end }}
+          {{- if $.Values.global.useDatabaseCert }}
+          volumeMounts:
+            {{- include "metabase.databaseCertVolumeMount" $.Values.global | nindent 12 }}
+          {{- end }}
+          {{- if .resources }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- if $.Values.global.useDatabaseCert }}
+      volumes:
+        {{- include "metabase.databaseCertVolume" $.Values.global | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}
