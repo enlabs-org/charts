@@ -23,6 +23,7 @@ issueCertificate: true
 clusterIssuer: 'letsencrypt'
 tlsSecretName: ''
 basicAuth: false
+whitelistSourceRange: '10.0.0.0/8,192.0.2.1/32'
 fcgi: false
 fcgi_script_filename: ''
 

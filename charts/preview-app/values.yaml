@@ -25,6 +25,9 @@ issueCertificate: true
 clusterIssuer: 'letsencrypt'
 tlsSecretName: ''
 basicAuth: false
+# Comma-separated CIDRs; when set, nginx answers 403 to any other source IP (applies to the main
+# ingress and every side-container ingress).
+whitelistSourceRange: ''
 fcgi: false
 fcgi_script_filename: ''
 

@@ -20,6 +20,9 @@ metadata:
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
     {{ end }}
     {{ end }}
+    {{ if $.Values.whitelistSourceRange }}
+    nginx.ingress.kubernetes.io/whitelist-source-range: {{ $.Values.whitelistSourceRange | quote }}
+    {{ end }}
 spec:
   ingressClassName: nginx
   {{ if $.Values.tls }}

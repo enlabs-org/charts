@@ -28,6 +28,9 @@ metadata:
     {{ if .Values.proxyBodySize }}
     nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.proxyBodySize | quote }}
     {{ end }}
+    {{ if .Values.whitelistSourceRange }}
+    nginx.ingress.kubernetes.io/whitelist-source-range: {{ .Values.whitelistSourceRange | quote }}
+    {{ end }}
 spec:
   ingressClassName: nginx
   {{ if .Values.tls }}
