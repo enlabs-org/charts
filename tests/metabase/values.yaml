@@ -1,0 +1,8 @@
+---
+image: 'metabase/metabase:latest'
+ingress:
+  enabled: true
+  host: metabase.example.com
+  tls: true
+  issueCertificate: true
+  clusterIssuer: 'letsencrypt'
