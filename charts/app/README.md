@@ -11,7 +11,7 @@ This is the recommended chart for deploying applications with multiple component
 - **Global defaults** - Set common values like `image` and `host` globally, with per-component overrides
 - **Pod scheduling control** - Node affinity, pod affinity, and pod anti-affinity with simplified shortcuts
 - **Security features** - IP whitelisting, security path filters, basic auth support, pod/container `securityContext`
-- **Resource management** - Per-component resource limits, Pod Disruption Budgets
+- **Resource management** - Per-component resource limits, Pod Disruption Budgets, Horizontal Pod Autoscaler
 - **Job support** - One-time jobs and scheduled cron jobs
 - **Ingress with TLS** - NGINX ingress with automatic TLS via cert-manager and Let's Encrypt
 
@@ -97,7 +97,7 @@ Each component supports the following configuration:
 |-----------|-------------|---------|
 | `enabled` | Enable this component | `true` |
 | `image` | Container image (overrides global.image) | Uses global.image |
-| `replicas` | Number of replicas | `1` |
+| `replicas` | Number of replicas (ignored when `hpa.enabled` is `true`) | `1` |
 | `strategy` | Deployment strategy (full Kubernetes syntax) | Kubernetes default |
 | `containerPort` | Container port (triggers service creation) | `null` |
 | `command` | Container command | `null` |
@@ -165,6 +165,98 @@ components:
 |-----------|-------------|---------|
 | `pdb.enabled` | Enable PDB | `false` |
 | `pdb.minAvailable` | Minimum available pods | `1` |
+
+### Horizontal Pod Autoscaler
+
+Scale a component automatically based on CPU / memory utilization (or custom metrics) using `autoscaling/v2`. The HPA targets the component's Deployment and is named `{release}-{component}`.
+
+When `hpa.enabled` is `true`, the chart **omits `replicas` from the Deployment** so that `helm upgrade` does not reset the replica count chosen by the autoscaler. The initial pod count is then `minReplicas`, not `replicas`.
+
+```yaml
+components:
+  web:
+    containerPort: 80
+    resources:
+      requests:              # required - HPA utilization targets are relative to requests
+        cpu: "100m"
+        memory: "128Mi"
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `hpa.enabled` | Enable HPA for this component | `false` |
+| `hpa.minReplicas` | Minimum number of replicas | `1` |
+| `hpa.maxReplicas` | Maximum number of replicas | Required |
+| `hpa.targetCPUUtilizationPercentage` | Target average CPU utilization (% of requests) | `null` |
+| `hpa.targetMemoryUtilizationPercentage` | Target average memory utilization (% of requests) | `null` |
+| `hpa.customMetrics` | Additional raw `autoscaling/v2` metrics entries (`Pods`, `Object`, `External`) | `[]` |
+| `hpa.behavior` | Raw `autoscaling/v2` scaling behavior (`scaleUp` / `scaleDown`) | `{}` |
+
+If no metric is configured, `metrics` is omitted and the cluster default applies (80% CPU utilization).
+
+**Example - custom scaling behavior:**
+
+Scale up fast, scale down slowly to avoid flapping:
+
+```yaml
+components:
+  web:
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+            - type: Pods
+              value: 4
+              periodSeconds: 15
+          selectPolicy: Max
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          policies:
+            - type: Percent
+              value: 10
+              periodSeconds: 60
+```
+
+**Example - custom metric (queue length via External metric):**
+
+```yaml
+components:
+  worker:
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 20
+      customMetrics:
+        - type: External
+          external:
+            metric:
+              name: queue_messages_ready
+              selector:
+                matchLabels:
+                  queue: default
+            target:
+              type: AverageValue
+              averageValue: "30"
+```
+
+Notes:
+- Requires the metrics-server (CPU / memory) or a custom / external metrics adapter in the cluster.
+- Set `resources.requests` on the component - utilization targets are computed relative to requests.
+- Combine with `pdb` and `podAntiAffinity` for HA; `pdb.minAvailable` should not exceed `hpa.minReplicas`.
 
 ### Affinity Configuration
 
@@ -745,6 +837,7 @@ make template-app-affinity
 
 ## Version History
 
+- **1.10.0** - Added HorizontalPodAutoscaler support per component (`hpa`); `replicas` is omitted from the Deployment when HPA is enabled
 - **1.6.0** - Added optional deployment strategy configuration per component
 - **1.2.0** - Replaced server-snippet security path filter with standalone blocking Ingress, added global securityPathFilter support
 - **1.1.0** - Added comprehensive affinity support (node affinity, pod affinity, pod anti-affinity)
