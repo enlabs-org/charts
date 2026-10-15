@@ -84,7 +84,6 @@ components:
         blockedPaths:
           - "/.git"
           - "/.env"
-          - "/.claude"
           - "/vendor"
           - "/node_modules"
     pdb:
