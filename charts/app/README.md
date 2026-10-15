@@ -81,6 +81,8 @@ cronJobs:
 |-----------|-------------|---------|
 | `global.image` | Default container image for all components | `null` |
 | `global.host` | Default host for ingress | `null` |
+| `global.ingressClassName` | Default ingress class (`nginx` or `traefik`; with Traefik `whitelistSourceRange` is enforced via an IP allowlist Middleware). Override per component with `ingress.className` | `nginx` |
+| `global.timezone` | Timezone for CronJobs (e.g. `Europe/Prague`) | `null` |
 | `global.imagePullPolicy` | Image pull policy | `Always` |
 | `global.labels` | Custom labels applied to all resources | `{}` |
 | `global.envFromSecret` | Default secret name for environment variables | `null` |
@@ -745,7 +747,14 @@ make template-app-affinity
 
 ## Version History
 
+- **1.9.0** - Added pod/container `securityContext` and container `args` support
+- **1.8.0** - Added PersistentVolume / PersistentVolumeClaim support
+- **1.7.0** - Added `global.timezone` for CronJobs
 - **1.6.0** - Added optional deployment strategy configuration per component
+- **1.5.0** - initContainers can inherit `global.image`
+- **1.4.0** - Traefik IP allowlist Middleware for `whitelistSourceRange`
+- **1.3.0** - Configurable `ingressClassName` (`global.ingressClassName`, `ingress.className`)
+- **1.2.1** - Fixed `livenessProbe.enabled: false` being ignored
 - **1.2.0** - Replaced server-snippet security path filter with standalone blocking Ingress, added global securityPathFilter support
 - **1.1.0** - Added comprehensive affinity support (node affinity, pod affinity, pod anti-affinity)
 - **1.0.3** - Maintenance release
