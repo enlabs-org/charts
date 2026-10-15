@@ -11,7 +11,10 @@ metadata:
     {{- . | nindent 4 }}
     {{- end }}
 spec:
+  {{- /* When HPA manages this component, omit replicas so helm upgrade does not reset the autoscaled count */}}
+  {{- if not ($component.hpa).enabled }}
   replicas: {{ $component.replicas | default 1 }}
+  {{- end }}
   {{- with $component.strategy }}
   strategy:
     {{- toYaml . | nindent 4 }}
