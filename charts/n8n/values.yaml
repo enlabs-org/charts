@@ -59,6 +59,41 @@ podSecurityContext: {}
 #       drop: [ALL]
 securityContext: {}
 
+# Container resources (requests / limits). Conservative defaults; tune for your
+# workflow load. Set `resources: {}` to run without requests/limits.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# Health probes — n8n exposes /healthz on the container port (5678).
+# Set `enabled: false` to omit a probe.
+livenessProbe:
+  enabled: true
+  path: /healthz
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+readinessProbe:
+  enabled: true
+  path: /healthz
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# ServiceAccount (optional). Default keeps the namespace `default` account.
+# When create is true, `name` defaults to the release name.
+# When create is false and `name` is set, the pod uses that existing account.
+serviceAccount:
+  create: false
+  name: ""
+  annotations: {}
+
 # Deployment strategy (optional). When persistence is enabled and this is
 # unset, defaults to Recreate to avoid ReadWriteOnce attach conflicts during
 # rolling updates. Set explicitly to override.

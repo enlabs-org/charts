@@ -1,0 +1,38 @@
+---
+# Full test values for n8n chart: probes, resources, ServiceAccount.
+
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "latest"
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+livenessProbe:
+  enabled: true
+  path: /healthz
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  enabled: true
+  path: /healthz
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+serviceAccount:
+  create: true
+  name: n8n-sa
+  annotations:
+    example.com/purpose: n8n

@@ -30,3 +30,17 @@ Usage: {{ include "n8n.imagePullPolicy" . }}
 {{- end -}}
 {{- $policy -}}
 {{- end -}}
+
+{{/*
+Resolve the ServiceAccount name for the pod.
+  - serviceAccount.create: true  -> serviceAccount.name or release name
+  - serviceAccount.create: false -> serviceAccount.name (empty = namespace default)
+Usage: {{ include "n8n.serviceAccountName" . }}
+*/}}
+{{- define "n8n.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- .Values.serviceAccount.name | default .Release.Name -}}
+{{- else -}}
+{{- .Values.serviceAccount.name | default "" -}}
+{{- end -}}
+{{- end -}}
