@@ -6,6 +6,8 @@ A collection of production-ready Helm charts for enlabs-org, validated through C
 
 ## Installation
 
+Requires Helm 3.19 or newer (CI validates on 3.19 and 4.0).
+
 Add the repository:
 
 ```bash
