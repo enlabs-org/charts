@@ -4,6 +4,8 @@
 
 [n8n](https://n8n.io/) is a free and open-source workflow automation tool that allows you to connect different services and automate tasks without coding. This chart deploys n8n in your Kubernetes cluster with support for custom configurations and persistent storage.
 
+> **Upgrade = application upgrade.** The default image tag is pinned to `Chart.appVersion` (n8n 2.x). n8n 2.x contains breaking changes compared to 1.x; read the n8n migration guide and back up the data volume/database before upgrading from 1.x. Pin `image.tag` to stay on a specific version.
+
 ## Features
 
 - **Visual Workflow Builder** - Drag and drop interface for creating automations
@@ -67,7 +69,7 @@ ingress:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `image.repository` | n8n image repository | `docker.n8n.io/n8nio/n8n` |
-| `image.tag` | Image tag / version. Empty falls back to `Chart.appVersion` | `"latest"` |
+| `image.tag` | Image tag / version. Empty falls back to `Chart.appVersion` | `""` (`2.43.6`) |
 | `image.pullPolicy` | Image pull policy | `Always` |
 | `replicas` | Number of replicas | `1` |
 | `envFromSecret` | Secret name for environment variables | `null` |

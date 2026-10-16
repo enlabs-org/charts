@@ -4,6 +4,8 @@
 
 [Metabase](https://www.metabase.com/) is an open-source business intelligence tool that lets you create dashboards and ask questions about your data without requiring SQL knowledge. This chart deploys Metabase in your Kubernetes cluster with support for external databases and persistent storage.
 
+> **Upgrade = application upgrade.** The default image tag is pinned to `Chart.appVersion` (Metabase LTS line v0.64); upgrading the chart upgrades Metabase, which may run database migrations. Back up the application database first and pin `image.tag` if you need a different version.
+
 ## Features
 
 - **Business Intelligence Dashboard** - Create charts, graphs, and dashboards from your data
@@ -86,7 +88,7 @@ ingress:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image` | Metabase container image | `metabase/metabase:latest` |
+| `image.repository` / `image.tag` | Metabase image; empty tag = `Chart.appVersion` (legacy string `image: "repo:tag"` still works) | `metabase/metabase` / `v0.64.2.5` |
 | `replicas` | Number of replicas | `1` |
 | `imagePullPolicy` | Image pull policy | `Always` |
 

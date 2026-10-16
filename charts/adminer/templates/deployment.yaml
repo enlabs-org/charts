@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: adminer
-          image: {{ .Values.image }}
+          image: {{ include "adminer.image" . }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - containerPort: 8080
