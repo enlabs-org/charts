@@ -1,6 +1,9 @@
 ---
 # Deployment
-image: 'adminer:latest'
+image:
+  repository: adminer
+  # Empty = Chart.appVersion (pinned). Legacy string form (image: 'repo:tag') still works.
+  tag: ''
 replicas: 1
 imagePullPolicy: 'Always'
 

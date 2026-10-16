@@ -1,6 +1,9 @@
 ---
 # Image
-image: ghcr.io/enlabs-org/k8s-pwa-dashboard:latest
+image:
+  repository: ghcr.io/enlabs-org/k8s-pwa-dashboard
+  # Empty = Chart.appVersion (pinned). Legacy string form (image: 'repo:tag') still works.
+  tag: ''
 imagePullPolicy: Always
 
 # Replicas
