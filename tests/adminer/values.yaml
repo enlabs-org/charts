@@ -2,3 +2,20 @@ ingress:
   enabled: true
   host: 'adminer.example.com' # Replace with your desired hostname
   whitelistSourceRange: '0.0.0.0/0' # Allow all IPs, adjust as necessary
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+livenessProbe:
+  enabled: true
+readinessProbe:
+  enabled: true

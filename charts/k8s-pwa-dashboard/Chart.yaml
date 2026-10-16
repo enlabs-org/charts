@@ -2,4 +2,4 @@
 apiVersion: v1
 description: Helm Chart for K8s Preview App Dashboard
 name: k8s-pwa-dashboard
-version: 1.2.0
+version: 1.3.0

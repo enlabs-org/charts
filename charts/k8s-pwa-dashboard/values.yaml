@@ -27,3 +27,27 @@ config:
     - default
   pollingInterval: 5000
   scalingEnabled: true
+
+# Pod / container security context (optional, empty = unset)
+podSecurityContext: {}
+securityContext: {}
+
+# Resources (optional, empty = unset)
+resources: {}
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+#  limits:
+#    memory: 256Mi
+
+# Probes
+livenessProbe:
+  enabled: true
+  path: '/api/v1/health'
+  initialDelaySeconds: 10
+  periodSeconds: 30
+readinessProbe:
+  enabled: true
+  path: '/api/v1/health'
+  initialDelaySeconds: 5
+  periodSeconds: 10
