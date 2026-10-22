@@ -234,7 +234,8 @@ components: {}
 #       envFromSecret: null
 #       env: []
 #       restartPolicy: Never
-#       backoffLimit: 3
+#       backoffLimit: 3                # 0 = no retries
+#       activeDeadlineSeconds: 600     # optional, kill the job after N seconds
 #       resources:
 #         requests:
 #           cpu: "100m"
@@ -256,7 +257,8 @@ jobs: []
 #       envFromSecret: null
 #       env: []
 #       restartPolicy: OnFailure
-#       backoffLimit: 3
+#       backoffLimit: 3                # 0 = no retries
+#       activeDeadlineSeconds: 600     # optional, kill the job after N seconds
 #       concurrencyPolicy: Forbid
 #       timezone: "UTC"                # override global.timezone
 #       resources:

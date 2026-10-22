@@ -451,7 +451,8 @@ Jobs are one-time executions:
 | `jobs[].image` | Container image | Uses global.image |
 | `jobs[].command` | Command to execute | Required |
 | `jobs[].restartPolicy` | Restart policy | `Never` |
-| `jobs[].backoffLimit` | Retry limit | `3` |
+| `jobs[].backoffLimit` | Retry limit (`0` disables retries) | `3` |
+| `jobs[].activeDeadlineSeconds` | Max job runtime in seconds, then the pod is killed | Not set |
 
 CronJobs are scheduled executions:
 
@@ -461,7 +462,10 @@ CronJobs are scheduled executions:
 | `cronJobs[].schedule` | Cron schedule | Required |
 | `cronJobs[].image` | Container image | Uses global.image |
 | `cronJobs[].command` | Command to execute | Required |
-| `cronJobs[].concurrencyPolicy` | Concurrency policy | `Allow` |
+| `cronJobs[].concurrencyPolicy` | Concurrency policy | `Forbid` |
+| `cronJobs[].restartPolicy` | Restart policy | `OnFailure` |
+| `cronJobs[].backoffLimit` | Retry limit (`0` disables retries) | `3` |
+| `cronJobs[].activeDeadlineSeconds` | Max job runtime in seconds, then the pod is killed | Not set |
 
 ## Security Features
 

@@ -179,6 +179,8 @@ jobs:
     image: "myapp-web:v1.0.0"
     command: "php artisan cache:clear && php artisan config:cache"
     restartPolicy: Never
+    backoffLimit: 0
+    activeDeadlineSeconds: 120
 
 cronJobs:
   - name: cleanup
@@ -197,3 +199,6 @@ cronJobs:
     image: "myapp-worker:v1.0.0"
     command: "php artisan report:weekly"
     envFromSecret: app-secrets
+    restartPolicy: Never
+    backoffLimit: 0
+    activeDeadlineSeconds: 3600
