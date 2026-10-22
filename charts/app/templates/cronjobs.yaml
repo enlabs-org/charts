@@ -19,7 +19,11 @@ spec:
   concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" }}
   jobTemplate:
     spec:
-      backoffLimit: {{ .backoffLimit | default 3 }}
+      {{- /* hasKey instead of default: backoffLimit: 0 (no retries) is a valid value */}}
+      backoffLimit: {{ hasKey . "backoffLimit" | ternary .backoffLimit 3 }}
+      {{- with .activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
       template:
         spec:
           {{- with include "app.podSecurityContext" (dict "component" . "global" $.Values.global) }}
