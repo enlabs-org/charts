@@ -12,6 +12,15 @@ entries:
   app:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2026-10-22T17:08:31.893010537Z"
+    description: Helm Chart for multi-component application deployments
+    digest: 5c8a9e9e8a5e70a79869d97e3f88efcca216893ddd84cab73c214047a6d53ca1
+    name: app
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/app-1.10.0/app-1.10.0.tgz
+    version: 1.10.0
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2026-07-02T08:11:30.565305967Z"
     description: Helm Chart for multi-component application deployments
     digest: b544eb4d674aa9645c02304deca60a94ed1648c6b1914aaa6f82588f4c8b9d8b
@@ -512,4 +521,4 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
     version: 1.0.0-rc
-generated: "2026-07-02T08:11:30.842968774Z"
+generated: "2026-10-22T17:08:31.89325306Z"
