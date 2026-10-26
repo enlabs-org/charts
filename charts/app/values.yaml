@@ -192,6 +192,14 @@ global:
 #       pdb:
 #         enabled: false
 #         minAvailable: 1
+#       hpa:                         # horizontal pod autoscaler (autoscaling/v2)
+#         enabled: false             # when true, `replicas` is omitted from the Deployment
+#         minReplicas: 2             # default: 1
+#         maxReplicas: 10            # required when enabled
+#         targetCPUUtilizationPercentage: 80
+#         targetMemoryUtilizationPercentage: 80
+#         customMetrics: []          # raw autoscaling/v2 metrics entries (Pods, Object, External)
+#         behavior: {}               # raw autoscaling/v2 behavior (scaleUp / scaleDown)
 #       strategy:
 #         type: RollingUpdate
 #         rollingUpdate:
