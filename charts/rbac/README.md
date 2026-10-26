@@ -78,6 +78,7 @@ access:
 | `access.allNamespaces` | Grant access to all namespaces | `false` |
 | `access.clusterAdmin` | Grant cluster administrator privileges | `false` |
 | `access.namespaceAdmin` | Grant namespace administrator privileges | `false` |
+| `access.clusterRead` | Read-only access to cluster-scoped objects (nodes, PVs, storage classes, CRDs…), no secrets, no write. Needs `installRoles: true` once per cluster | `false` |
 | `access.allowedNamespaces` | List of specific namespaces to grant access to | `[]` |
 
 ## Access Levels
@@ -164,6 +165,17 @@ rules:
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+```
+
+### Cluster Read Role
+
+Read-only (`get`, `list`, `watch`) access to objects that are not namespaced and so are not covered by the built-in `view` role: nodes, persistentvolumes, storageclasses, volumeattachments, csidrivers, csinodes, ingressclasses, CRDs, admission webhooks/policies and priorityclasses. It contains no secrets, no `pods/exec|attach|portforward` and no RBAC objects. Bound with `access.clusterRead: true`.
+
+```yaml
+user:
+  name: "monitoring"
+access:
+  clusterRead: true
 ```
 
 ### Namespace Admin Role
@@ -330,5 +342,6 @@ Ensure `installRoles: true` is set if you're using the built-in developer or nam
 
 ## Version History
 
-- **1.0.1** - Current version
+- **1.1.0** - Current version: added `access.clusterRead` (ClusterRole `cluster-read`)
+- **1.0.1**
 - **1.0.0** - Initial release

@@ -9,4 +9,5 @@ access:
   allNamespaces: false
   clusterAdmin: false
   namespaceAdmin: false
+  clusterRead: false
   allowedNamespaces: []
