@@ -401,6 +401,14 @@ entries:
     version: 0.1-dev
   rbac:
   - apiVersion: v1
+    created: "2026-10-26T11:34:07.791510069Z"
+    description: Helm Chart for setup access control to cluster resources
+    digest: 4da06c061660bd137d25d10f4c2894659f9fe742dfb46270c5891ce9f93adbf9
+    name: rbac
+    urls:
+    - https://github.com/enlabs-org/charts/releases/download/rbac-1.1.0/rbac-1.1.0.tgz
+    version: 1.1.0
+  - apiVersion: v1
     created: "2025-08-20T07:54:51.37397933Z"
     description: Helm Chart for setup access control to cluster resources
     digest: d39b7d3910f2fd157ac39c7665a26cee135705b5913648987049478fbe70702d
@@ -521,4 +529,4 @@ entries:
     urls:
     - https://github.com/enlabs-org/charts/releases/download/stable-app-1.0.0-rc/stable-app-1.0.0-rc.tgz
     version: 1.0.0-rc
-generated: "2026-10-22T17:08:31.89325306Z"
+generated: "2026-10-26T11:34:07.791671591Z"
