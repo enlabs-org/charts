@@ -24,6 +24,8 @@ make template-stable-app
 make template-metabase
 make template-adminer
 make template-n8n
+make template-n8n-persistence
+make template-n8n-security
 make template-rbac
 
 # Clean generated files
@@ -228,6 +230,8 @@ See `tests/app/values-affinity.yaml` for comprehensive examples.
 Test values are in `tests/<chart-name>/` and are used by the Makefile template commands:
 - `tests/app/values-full.yaml` - comprehensive test with all features
 - `tests/app/values-minimal.yaml` - minimal working configuration
+- `tests/stable-app/values.yaml`, `tests/metabase/values.yaml` - ingress + TLS enabled, so Ingress gets rendered in CI
+- `tests/n8n/values-persistence.yaml`, `tests/n8n/values-security.yaml` - n8n variants (rendered into `.build/n8n-<variant>/`)
 
 ## Template Helpers
 

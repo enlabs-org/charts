@@ -4,7 +4,7 @@ template-preview-app:
 
 template-stable-app:
 	rm -rf .build/stable-app
-	helm template test-stable-app charts/stable-app --output-dir=.build --set image=my-stable-app-image --set host=stable-app.example.com -f tests/preview-app/values.yaml --debug
+	helm template test-stable-app charts/stable-app --output-dir=.build --set image=my-stable-app-image --set host=stable-app.example.com -f tests/stable-app/values.yaml --debug
 
 template-app:
 	rm -rf .build/app
@@ -28,7 +28,7 @@ template-app-security:
 
 template-metabase:
 	rm -rf .build/metabase
-	helm template test-metabase charts/metabase --output-dir=.build --debug
+	helm template test-metabase charts/metabase --output-dir=.build -f tests/metabase/values.yaml --debug
 
 template-adminer:
 	rm -rf .build/adminer
@@ -39,12 +39,12 @@ template-n8n:
 	helm template test-n8n charts/n8n --output-dir=.build --debug
 
 template-n8n-persistence:
-	rm -rf .build/n8n
-	helm template test-n8n-persistence charts/n8n --output-dir=.build -f tests/n8n/values-persistence.yaml --debug
+	rm -rf .build/n8n-persistence
+	helm template test-n8n-persistence charts/n8n --output-dir=.build/n8n-persistence -f tests/n8n/values-persistence.yaml --debug
 
 template-n8n-security:
-	rm -rf .build/n8n
-	helm template test-n8n-security charts/n8n --output-dir=.build -f tests/n8n/values-security.yaml --debug
+	rm -rf .build/n8n-security
+	helm template test-n8n-security charts/n8n --output-dir=.build/n8n-security -f tests/n8n/values-security.yaml --debug
 
 template-rbac:
 	rm -rf .build/rbac
@@ -62,6 +62,9 @@ helm-template:
 	make template-app-persistence
 	make template-app-security
 	make template-metabase
+	make template-n8n
+	make template-n8n-persistence
+	make template-n8n-security
 	make template-adminer
 	make template-rbac
 	make template-k8s-pwa-dashboard
@@ -71,6 +74,7 @@ helm-lint:
 	helm lint charts/stable-app
 	helm lint charts/app
 	helm lint charts/metabase
+	helm lint charts/n8n
 	helm lint charts/adminer
 	helm lint charts/rbac
 	helm lint charts/k8s-pwa-dashboard
