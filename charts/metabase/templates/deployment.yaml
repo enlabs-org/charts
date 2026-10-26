@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: metabase
-          image: {{ .Values.image }}
+          image: {{ include "metabase.image" . }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - containerPort: 3000

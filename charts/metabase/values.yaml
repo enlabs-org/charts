@@ -1,6 +1,9 @@
 ---
 # Deployment
-image: 'metabase/metabase:latest'
+image:
+  repository: metabase/metabase
+  # Empty = Chart.appVersion (pinned). Legacy string form (image: 'repo:tag') still works.
+  tag: ''
 replicas: 1
 imagePullPolicy: 'Always'
 database:

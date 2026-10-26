@@ -4,6 +4,8 @@
 
 [Adminer](https://www.adminer.org/) is a full-featured database management tool written in PHP. This chart deploys Adminer as a web-based interface for managing your databases including MySQL, PostgreSQL, SQLite, MS SQL, Oracle, Firebird, SimpleDB, Elasticsearch, and MongoDB.
 
+> **Upgrade = application upgrade.** The default image tag is pinned to `Chart.appVersion`; upgrading the chart can upgrade Adminer (6.x is a major release vs. 5.x). Pin `image.tag` explicitly if you need a different version.
+
 ## Features
 
 - **Multi-database support** - MySQL, PostgreSQL, SQLite, MS SQL, Oracle, and more
@@ -63,7 +65,7 @@ ingress:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image` | Adminer container image | `adminer:latest` |
+| `image.repository` / `image.tag` | Adminer image; empty tag = `Chart.appVersion` (legacy string `image: "repo:tag"` still works) | `adminer` / `6.1.2` |
 | `replicas` | Number of replicas | `1` |
 | `imagePullPolicy` | Image pull policy | `Always` |
 

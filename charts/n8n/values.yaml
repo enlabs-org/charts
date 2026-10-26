@@ -17,9 +17,8 @@
 #   - docker.n8n.io/n8nio/n8n:1.94.0     pinned version
 image:
   repository: docker.n8n.io/n8nio/n8n
-  # Default "latest". Pin to a specific version in production (e.g. "1.94.0").
-  # Empty falls back to Chart.appVersion.
-  tag: "latest"
+  # Empty = Chart.appVersion (pinned). Override to pin a different version.
+  tag: ""
   pullPolicy: Always
 
 replicas: 1

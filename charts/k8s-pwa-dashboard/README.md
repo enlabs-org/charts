@@ -4,6 +4,8 @@
 
 [K8s PWA Dashboard](https://github.com/enlabs-org/k8s-pwa-dashboard) is a simple web dashboard for monitoring and scaling Kubernetes deployments. It provides a clean interface to view deployment status across namespaces and quickly start/stop applications by scaling replicas.
 
+> **Upgrade = application upgrade.** The image tag defaults to `Chart.appVersion`, which is still `latest` because `enlabs-org/k8s-pwa-dashboard` publishes no tags yet. Pin `image.tag` once releases exist.
+
 ## Features
 
 - **Dynamic namespace discovery** - Automatically shows all namespaces except those in blacklist
@@ -91,7 +93,7 @@ config:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image` | Dashboard container image | `ghcr.io/enlabs-org/k8s-pwa-dashboard:latest` |
+| `image.repository` / `image.tag` | Dashboard image; empty tag = `Chart.appVersion` (legacy string `image: "repo:tag"` still works) | `ghcr.io/enlabs-org/k8s-pwa-dashboard` / `latest` (repo has no tags yet) |
 | `imagePullPolicy` | Image pull policy | `Always` |
 | `replicas` | Number of replicas | `1` |
 
