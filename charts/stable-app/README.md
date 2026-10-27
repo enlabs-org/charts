@@ -91,6 +91,7 @@ cronJobs:
 |-----------|-------------|---------|
 | `useDefaultIngress` | Create default ingress | `true` |
 | `host` | Hostname for ingress | `""` |
+| `extraHosts` | Additional hostnames (aliases) served by the same ingress and TLS certificate | `[]` |
 | `wwwRedirect` | Redirect www subdomain to apex | `false` |
 | `tls` | Enable TLS | `true` |
 | `issueCertificate` | Auto-issue certificate via cert-manager | `true` |

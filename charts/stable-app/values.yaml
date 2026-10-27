@@ -18,6 +18,7 @@ useDefaultService: true
 # Ingress
 useDefaultIngress: true
 host: ''
+extraHosts: []
 wwwRedirect: false
 tls: true
 issueCertificate: true
