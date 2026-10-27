@@ -67,6 +67,9 @@ components:
     ingress:
       enabled: true
       host: "app.example.com"
+      extraHosts:
+        - "app-alias.example.com"
+        - "app.example.eu"
       path: "/"
       pathType: Prefix
       tls:

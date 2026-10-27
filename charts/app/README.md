@@ -125,6 +125,7 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 |-----------|-------------|---------|
 | `ingress.enabled` | Enable ingress | `false` |
 | `ingress.host` | Hostname (overrides global.host) | Uses global.host |
+| `ingress.extraHosts` | Additional hostnames (aliases) served by the same ingress and TLS certificate | `[]` |
 | `ingress.path` | Path pattern | `/` |
 | `ingress.pathType` | Path type | `Prefix` |
 | `ingress.tls.enabled` | Enable TLS | `true` |
