@@ -28,7 +28,7 @@ template-app-security:
 
 template-metabase:
 	rm -rf .build/metabase
-	helm template test-metabase charts/metabase --output-dir=.build --debug
+	helm template test-metabase charts/metabase --output-dir=.build -f tests/metabase/values.yaml --debug
 
 template-adminer:
 	rm -rf .build/adminer

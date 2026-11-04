@@ -1,0 +1,17 @@
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi
+livenessProbe:
+  enabled: true
+readinessProbe:
+  enabled: true

@@ -20,3 +20,27 @@ ingress:
   issueCertificate: true
   clusterIssuer: 'letsencrypt'
   tlsSecretName: ''
+
+# Pod / container security context (optional, empty = unset)
+podSecurityContext: {}
+securityContext: {}
+
+# Resources (optional, empty = unset)
+resources: {}
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+#  limits:
+#    memory: 256Mi
+
+# Probes
+livenessProbe:
+  enabled: false
+  path: '/api/health'
+  initialDelaySeconds: 120
+  periodSeconds: 30
+readinessProbe:
+  enabled: false
+  path: '/api/health'
+  initialDelaySeconds: 60
+  periodSeconds: 10

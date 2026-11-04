@@ -101,6 +101,22 @@ ingress:
 | `database.user` | Database username | `""` |
 | `database.password` | Database password | `""` |
 
+### Security, Resources and Probes
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `podSecurityContext` | Pod-level securityContext (fsGroup, runAsUser, ...) | `{}` |
+| `securityContext` | Container-level securityContext | `{}` |
+| `resources` | Container requests/limits | `{}` |
+| `livenessProbe.enabled` | Enable liveness probe (disabled by default) | `false` |
+| `livenessProbe.path` | Liveness probe HTTP path | `/api/health` |
+| `livenessProbe.initialDelaySeconds` | Liveness initial delay | `120` |
+| `livenessProbe.periodSeconds` | Liveness period | `30` |
+| `readinessProbe.enabled` | Enable readiness probe | `false` |
+| `readinessProbe.path` | Readiness probe HTTP path | `/api/health` |
+| `readinessProbe.initialDelaySeconds` | Readiness initial delay | `60` |
+| `readinessProbe.periodSeconds` | Readiness period | `10` |
+
 ### Ingress Settings
 
 | Parameter | Description | Default |
@@ -470,6 +486,7 @@ Metabase can connect to:
 
 ## Version History
 
+- **1.1.0** - Optional `resources`, `livenessProbe`/`readinessProbe`, `podSecurityContext`/`securityContext`
 - **1.0.2** - Current version
 - **1.0.0** - Initial release
 

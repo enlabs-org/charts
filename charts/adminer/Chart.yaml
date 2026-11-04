@@ -2,4 +2,4 @@
 apiVersion: v1
 description: Helm Chart for installing Adminer
 name: adminer
-version: 1.0.0
+version: 1.1.0

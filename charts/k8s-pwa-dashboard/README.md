@@ -102,6 +102,22 @@ config:
 | `servicePort` | Service port | `80` |
 | `containerPort` | Container port | `3001` |
 
+### Security, Resources and Probes
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `podSecurityContext` | Pod-level securityContext (fsGroup, runAsUser, ...) | `{}` |
+| `securityContext` | Container-level securityContext | `{}` |
+| `resources` | Container requests/limits | `{}` |
+| `livenessProbe.enabled` | Enable liveness probe (enabled by default by default) | `true` |
+| `livenessProbe.path` | Liveness probe HTTP path | `/api/v1/health` |
+| `livenessProbe.initialDelaySeconds` | Liveness initial delay | `10` |
+| `livenessProbe.periodSeconds` | Liveness period | `30` |
+| `readinessProbe.enabled` | Enable readiness probe | `true` |
+| `readinessProbe.path` | Readiness probe HTTP path | `/api/v1/health` |
+| `readinessProbe.initialDelaySeconds` | Readiness initial delay | `5` |
+| `readinessProbe.periodSeconds` | Readiness period | `10` |
+
 ### Ingress Settings
 
 | Parameter | Description | Default |
@@ -364,6 +380,7 @@ curl -I https://k8s-dashboard.example.com/api/v1/health
 
 ## Version History
 
+- **1.3.0** - Optional `resources`, `livenessProbe`/`readinessProbe`, `podSecurityContext`/`securityContext`
 - **1.2.0** - Added file browser with directory navigation and file download, improved detail page layout (two-column)
 - **1.1.0** - Added deployment detail view with pod monitoring, container info, and read-only log viewer
 - **1.0.0** - Initial release

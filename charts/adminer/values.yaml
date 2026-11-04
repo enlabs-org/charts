@@ -14,3 +14,27 @@ ingress:
   clusterIssuer: 'letsencrypt'
   tlsSecretName: ''
   whitelistSourceRange: null # Allow all IPs, adjust as necessary
+
+# Pod / container security context (optional, empty = unset)
+podSecurityContext: {}
+securityContext: {}
+
+# Resources (optional, empty = unset)
+resources: {}
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+#  limits:
+#    memory: 256Mi
+
+# Probes
+livenessProbe:
+  enabled: false
+  path: '/'
+  initialDelaySeconds: 10
+  periodSeconds: 10
+readinessProbe:
+  enabled: false
+  path: '/'
+  initialDelaySeconds: 5
+  periodSeconds: 10

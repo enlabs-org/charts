@@ -67,6 +67,22 @@ ingress:
 | `replicas` | Number of replicas | `1` |
 | `imagePullPolicy` | Image pull policy | `Always` |
 
+### Security, Resources and Probes
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `podSecurityContext` | Pod-level securityContext (fsGroup, runAsUser, ...) | `{}` |
+| `securityContext` | Container-level securityContext | `{}` |
+| `resources` | Container requests/limits | `{}` |
+| `livenessProbe.enabled` | Enable liveness probe (disabled by default) | `false` |
+| `livenessProbe.path` | Liveness probe HTTP path | `/` |
+| `livenessProbe.initialDelaySeconds` | Liveness initial delay | `10` |
+| `livenessProbe.periodSeconds` | Liveness period | `10` |
+| `readinessProbe.enabled` | Enable readiness probe | `false` |
+| `readinessProbe.path` | Readiness probe HTTP path | `/` |
+| `readinessProbe.initialDelaySeconds` | Readiness initial delay | `5` |
+| `readinessProbe.periodSeconds` | Readiness period | `10` |
+
 ### Ingress Settings
 
 | Parameter | Description | Default |
@@ -336,6 +352,7 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
 
 ## Version History
 
+- **1.1.0** - Optional `resources`, `livenessProbe`/`readinessProbe`, `podSecurityContext`/`securityContext`
 - **1.0.0** - Initial release
 
 ## Related Tools
