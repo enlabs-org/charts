@@ -188,7 +188,6 @@ global:
 #           blockedPaths:
 #             - "/.git"
 #             - "/.env"
-#             - "/.claude"
 #       pdb:
 #         enabled: false
 #         minAvailable: 1
