@@ -1,0 +1,67 @@
+---
+# Deployment
+useDefaultDeployment: true
+image: ''
+replicas: 1
+containerPort: 80
+livenessProbePath: '/'
+restartAfterRedeploy: false
+envFromSecret: config
+env: null
+useDatabaseCert: true
+databaseCert: "/etc/ssl/certs"
+
+# Service
+useDefaultService: true
+
+# Ingress
+useDefaultIngress: true
+host: ''
+wwwRedirect: false
+tls: true
+issueCertificate: true
+clusterIssuer: 'letsencrypt'
+tlsSecretName: ''
+basicAuth: false
+fcgi: false
+fcgi_script_filename: ''
+
+# Jobs
+jobs: 
+  - name: job-example
+    image: job-image
+    command: ['sh', '-c', 'echo Job running...']
+    env:
+      - name: JOB_ENV_VAR
+        value: job-value
+    restartPolicy: Never
+
+# CronJobs
+cronJobs:
+  - name: cronjob-example
+    schedule: "*/5 * * * *"
+    image: cronjob-image
+    command: ['sh', '-c', 'echo CronJob running...']
+    env:
+      - name: CRONJOB_ENV_VAR
+        value: cronjob-value
+
+initContainers: 
+  - name: init-myservice
+    image: busybox
+    command: ['sh', '-c', 'echo Init container running...']
+    volumeMounts:
+      - name: my-volume
+        mountPath: /mnt/data
+
+sideContainers: 
+  - name: sidecar-container
+    image: sidecar-image
+    imagePullPolicy: Always
+    command: ['sh', '-c', 'echo Sidecar container running...']
+    envFromSecret: my-secret
+    sameAsMain: true
+    port: 8080
+    env:
+      name: MY_ENV_VAR
+      value: my-value
