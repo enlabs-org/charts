@@ -261,6 +261,23 @@ securityContext:
     drop: [ALL]
 ```
 
+### Resources, Probes & ServiceAccount
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `resources` | Container requests/limits (`{}` = none) | requests `100m`/`256Mi`, limits `1`/`1Gi` |
+| `livenessProbe.enabled` | Enable liveness probe (`GET /healthz` on 5678) | `true` |
+| `livenessProbe.path` | Probe path | `/healthz` |
+| `livenessProbe.initialDelaySeconds` / `periodSeconds` / `timeoutSeconds` / `failureThreshold` | Probe timings | `30` / `10` / `5` / `6` |
+| `readinessProbe.enabled` | Enable readiness probe (`GET /healthz` on 5678) | `true` |
+| `readinessProbe.path` | Probe path | `/healthz` |
+| `readinessProbe.initialDelaySeconds` / `periodSeconds` / `timeoutSeconds` / `failureThreshold` | Probe timings | `10` / `10` / `5` / `3` |
+| `serviceAccount.create` | Create a ServiceAccount | `false` |
+| `serviceAccount.name` | Name; defaults to the release name when `create: true`, otherwise the pod uses this existing account (empty = namespace `default`) | `""` |
+| `serviceAccount.annotations` | ServiceAccount annotations (e.g. IRSA / Workload Identity) | `{}` |
+
+Set `livenessProbe.enabled: false` / `readinessProbe.enabled: false` to omit a probe. With SQLite and large DBs n8n may start slowly — raise `livenessProbe.initialDelaySeconds` or `failureThreshold`.
+
 ### Container Command & Args
 
 Override the container command or its arguments.
@@ -674,6 +691,7 @@ persistence:
 
 ## Version History
 
+- **1.4.0** - Added liveness/readiness probes (`/healthz`), container `resources` and optional ServiceAccount
 - **1.2.0** - Split `image` into `image.repository` + `image.tag` + `image.pullPolicy` (legacy string form still supported); introduced `Chart.appVersion` as default tag
 - **1.1.0** - Added optional PersistentVolumeClaim support for `/home/node/.n8n`, with auto-`Recreate` strategy on RWO
 - **1.0.0** - Initial release

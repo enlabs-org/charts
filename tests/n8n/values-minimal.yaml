@@ -1,0 +1,12 @@
+---
+# Minimal test values: probes disabled, no resources, no ServiceAccount.
+
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  tag: "latest"
+
+resources: {}
+livenessProbe:
+  enabled: false
+readinessProbe:
+  enabled: false

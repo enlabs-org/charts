@@ -38,6 +38,14 @@ template-n8n:
 	rm -rf .build/n8n
 	helm template test-n8n charts/n8n --output-dir=.build --debug
 
+template-n8n-full:
+	rm -rf .build/n8n
+	helm template test-n8n-full charts/n8n --output-dir=.build -f tests/n8n/values-full.yaml --debug
+
+template-n8n-minimal:
+	rm -rf .build/n8n
+	helm template test-n8n-minimal charts/n8n --output-dir=.build -f tests/n8n/values-minimal.yaml --debug
+
 template-n8n-persistence:
 	rm -rf .build/n8n
 	helm template test-n8n-persistence charts/n8n --output-dir=.build -f tests/n8n/values-persistence.yaml --debug
