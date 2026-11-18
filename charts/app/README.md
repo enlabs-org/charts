@@ -133,6 +133,7 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 | `ingress.wwwRedirect` | Redirect www subdomain | `false` |
 | `ingress.basicAuth.enabled` | Enable basic auth | `false` |
 | `ingress.whitelistSourceRange` | IP whitelist (comma-separated) | `""` |
+| `ingress.whitelistIpStrategy` | Traefik only: `ipStrategy` of the allowlist (`depth`, `excludedIPs`, `ipv6Subnet`) — how the client IP is taken from `X-Forwarded-For` | not set (TCP peer) |
 | `ingress.securityPathFilter.enabled` | Block sensitive paths (overrides global) | `false` |
 | `ingress.securityPathFilter.blockedPaths` | Array of blocked paths (overrides global) | `[]` |
 
@@ -481,6 +482,30 @@ components:
       enabled: true
       whitelistSourceRange: "10.0.0.0/8,192.168.0.0/16"
 ```
+
+#### Behind a CDN or proxy (Traefik)
+
+By default Traefik checks the allowlist against the TCP peer. Behind Cloudflare (or another
+proxy) that is the proxy's edge IP, so every request is rejected. Set `whitelistIpStrategy`
+to take the client IP from `X-Forwarded-For` instead:
+
+```yaml
+components:
+  web:
+    ingress:
+      enabled: true
+      className: traefik
+      whitelistSourceRange: "203.0.113.10/32"
+      whitelistIpStrategy:
+        # Cloudflare ranges (https://www.cloudflare.com/ips/) — the rightmost IP outside them is the client
+        excludedIPs: "173.245.48.0/20,103.21.244.0/22,...,2c0f:f248::/32"
+```
+
+Only safe when Traefik drops `X-Forwarded-For` from untrusted sources — i.e. the entrypoint's
+`forwardedHeaders.trustedIPs` lists just the proxy ranges (never `forwardedHeaders.insecure`).
+Otherwise a client can send its own header and spoof an allowed IP.
+`depth` and `excludedIPs` are mutually exclusive in Traefik; `ipv6Subnet` groups IPv6 clients
+by prefix. Ignored for NGINX ingress (use the controller's `real-ip-header` / `use-forwarded-headers`).
 
 ### Security Path Filter
 
