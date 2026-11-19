@@ -21,6 +21,25 @@ spec:
       {{- range splitList "," $component.ingress.whitelistSourceRange }}
       - {{ trim . | quote }}
       {{- end }}
+    {{- with $component.ingress.whitelistIpStrategy }}
+    ipStrategy:
+      {{- if hasKey . "depth" }}
+      depth: {{ .depth | int }}
+      {{- end }}
+      {{- with .excludedIPs }}
+      {{- $excluded := . }}
+      {{- if kindIs "string" . }}
+      {{- $excluded = splitList "," . }}
+      {{- end }}
+      excludedIPs:
+        {{- range $excluded }}
+        - {{ trim . | quote }}
+        {{- end }}
+      {{- end }}
+      {{- with .ipv6Subnet }}
+      ipv6Subnet: {{ . | int }}
+      {{- end }}
+    {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

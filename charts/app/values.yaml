@@ -183,6 +183,10 @@ global:
 #           scriptFilename: ""
 #         proxyBodySize: ""
 #         whitelistSourceRange: ""
+#         whitelistIpStrategy:       # Traefik only: how the client IP is picked (ipAllowList.ipStrategy)
+#           depth: 0                 # use the Nth IP from the right of X-Forwarded-For
+#           excludedIPs: ""          # or skip these ranges, taking the rightmost remaining IP (comma-separated or list)
+#           ipv6Subnet: 0            # match IPv6 clients by subnet prefix length
 #         securityPathFilter:
 #           enabled: false
 #           blockedPaths:
