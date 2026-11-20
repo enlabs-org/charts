@@ -3,11 +3,25 @@
 {{- if $component.ingress }}
 {{- if $component.ingress.enabled }}
 {{- $ingressHost := $component.ingress.host | default $.Values.global.host }}
+{{- $isTraefik := include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
+{{- $publicName := include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}
+{{- $bodyBytes := "0" }}
+{{- if $component.ingress.proxyBodySize }}
+{{- $bodyBytes = include "app.sizeToBytes" $component.ingress.proxyBodySize }}
+{{- end }}
+{{- /* Traefik Middlewares attached to this Ingress, referenced as <namespace>-<name>@kubernetescrd */}}
+{{- $middlewares := list }}
+{{- if and $isTraefik $component.ingress.whitelistSourceRange }}
+{{- $middlewares = append $middlewares (printf "%s-%s-ip-allowlist@kubernetescrd" $.Release.Namespace $publicName) }}
+{{- end }}
+{{- if and $isTraefik (ne $bodyBytes "0") }}
+{{- $middlewares = append $middlewares (printf "%s-%s-body-size@kubernetescrd" $.Release.Namespace $publicName) }}
+{{- end }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+  name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}
   labels:
     {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
     {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
@@ -29,7 +43,7 @@ metadata:
     {{- if $component.ingress.basicAuth }}
     {{- if $component.ingress.basicAuth.enabled }}
     nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-auth
+    nginx.ingress.kubernetes.io/auth-secret: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-auth
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
     {{- end }}
     {{- end }}
@@ -37,20 +51,19 @@ metadata:
     {{- if $component.ingress.fcgi.enabled }}
     nginx.ingress.kubernetes.io/backend-protocol: "FCGI"
     nginx.ingress.kubernetes.io/fastcgi-index: "index.php"
-    nginx.ingress.kubernetes.io/fastcgi-params-configmap: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-fcgi-cm
+    nginx.ingress.kubernetes.io/fastcgi-params-configmap: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-fcgi-cm
     {{- end }}
     {{- end }}
-    {{- if $component.ingress.proxyBodySize }}
+    {{- /* Request body limit: nginx annotation, or a Traefik buffering Middleware (see middleware-body-size.yaml) */}}
+    {{- if and $component.ingress.proxyBodySize (not $isTraefik) }}
     nginx.ingress.kubernetes.io/proxy-body-size: {{ $component.ingress.proxyBodySize | quote }}
     {{- end }}
-    {{- /* IP Whitelist for VPN restriction */}}
-    {{- if $component.ingress.whitelistSourceRange }}
-    {{- $isTraefik := include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
-    {{- if $isTraefik }}
-    traefik.ingress.kubernetes.io/router.middlewares: {{ $.Release.Namespace }}-{{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-ip-allowlist@kubernetescrd
-    {{- else }}
+    {{- /* IP Whitelist for VPN restriction: nginx annotation, or a Traefik allowlist Middleware */}}
+    {{- if and $component.ingress.whitelistSourceRange (not $isTraefik) }}
     nginx.ingress.kubernetes.io/whitelist-source-range: {{ $component.ingress.whitelistSourceRange | quote }}
     {{- end }}
+    {{- if $middlewares }}
+    traefik.ingress.kubernetes.io/router.middlewares: {{ join "," $middlewares }}
     {{- end }}
 spec:
   ingressClassName: {{ $component.ingress.className | default $.Values.global.ingressClassName | default "nginx" }}
@@ -71,7 +84,7 @@ spec:
       {{- if $customSecretName }}
       secretName: {{ $customSecretName }}
       {{- else }}
-      secretName: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-tls
+      secretName: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-tls
       {{- end }}
   {{- end }}
   rules:
@@ -82,7 +95,7 @@ spec:
             pathType: {{ $component.ingress.pathType | default "Prefix" }}
             backend:
               service:
-                name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+                name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}
                 port:
                   name: http
     {{- range $component.ingress.extraHosts }}
@@ -93,7 +106,7 @@ spec:
             pathType: {{ $component.ingress.pathType | default "Prefix" }}
             backend:
               service:
-                name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}
+                name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}
                 port:
                   name: http
     {{- end }}

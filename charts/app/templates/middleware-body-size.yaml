@@ -1,0 +1,28 @@
+{{- range $componentName, $component := .Values.components }}
+{{- if ne ($component.enabled | default true) false }}
+{{- if $component.ingress }}
+{{- if $component.ingress.enabled }}
+{{- if $component.ingress.proxyBodySize }}
+{{- $isTraefik := include "app.isTraefik" (dict "className" $component.ingress.className "globalClassName" $.Values.global.ingressClassName) }}
+{{- $bodyBytes := include "app.sizeToBytes" $component.ingress.proxyBodySize }}
+{{- /* nginx treats 0 as "no limit"; so does Traefik when no buffering Middleware is attached */}}
+{{- if and $isTraefik (ne $bodyBytes "0") }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-body-size
+  labels:
+    {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
+    {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
+    {{- . | nindent 4 }}
+    {{- end }}
+spec:
+  buffering:
+    maxRequestBodyBytes: {{ $bodyBytes }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -71,6 +71,45 @@ Usage: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "co
 {{- end }}
 
 {{/*
+Name of the externally visible resources of a component: Service, Ingress, TLS secret
+and the helper objects hanging off the Ingress (auth secret, fcgi ConfigMap, Traefik
+Middlewares, security-block Ingress). Defaults to the component fullname; a component can
+set `fullnameOverride` to keep the names of a previous deployment (e.g. when migrating
+from the stable-app chart, so that the Service DNS name and the TLS secret stay the same).
+The Deployment and the PDB always keep the component fullname: a Deployment selector is
+immutable, so reusing the old Deployment name with a different chart would fail to sync.
+Usage: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}
+*/}}
+{{- define "app.componentPublicName" -}}
+{{- if .override -}}
+{{- .override | trunc 63 | trimSuffix "-" }}
+{{- else -}}
+{{- include "app.componentFullname" . }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Convert an nginx-style size ("512k", "50m", "1g", "1048576") to bytes.
+Used for the Traefik buffering Middleware (maxRequestBodyBytes). Values must be quoted
+strings, otherwise Helm turns large numbers into floats ("2.097152e+08").
+Usage: {{ include "app.sizeToBytes" "200M" }}
+*/}}
+{{- define "app.sizeToBytes" -}}
+{{- $s := toString . | lower | trim -}}
+{{- if regexMatch "^[0-9]+$" $s -}}
+{{- $s -}}
+{{- else if regexMatch "^[0-9]+k$" $s -}}
+{{- mul (trimSuffix "k" $s | int64) 1024 -}}
+{{- else if regexMatch "^[0-9]+m$" $s -}}
+{{- mul (trimSuffix "m" $s | int64) 1048576 -}}
+{{- else if regexMatch "^[0-9]+g$" $s -}}
+{{- mul (trimSuffix "g" $s | int64) 1073741824 -}}
+{{- else -}}
+{{- fail (printf "ingress.proxyBodySize %q is not valid (use a quoted string such as \"512k\", \"50m\", \"1g\", or a number of bytes)" .) -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 Get envFromSecret - component-level overrides global
 Usage: {{ include "app.envFromSecret" (dict "component" $component "global" $.Values.global) }}
 */}}

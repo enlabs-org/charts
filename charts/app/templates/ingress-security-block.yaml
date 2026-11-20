@@ -10,7 +10,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-security-block
+  name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-security-block
   labels:
     {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
     {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}
@@ -35,7 +35,7 @@ spec:
       {{- if $customSecretName }}
       secretName: {{ $customSecretName }}
       {{- else }}
-      secretName: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-tls
+      secretName: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-tls
       {{- end }}
   {{- end }}
   rules:
@@ -47,7 +47,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-security-block
+                name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-security-block
                 port:
                   number: 80
           {{- end }}

@@ -160,6 +160,10 @@ global:
 #         periodSeconds: 5
 #       envFromSecret: null
 #       env: []
+#       # Name of Service, Ingress, TLS secret and Ingress helper objects (Middlewares, fcgi
+#       # ConfigMap, auth secret). Default: <release>-<component>. Use it to keep the names of a
+#       # previous deployment (e.g. stable-app). Deployment and PDB keep <release>-<component>.
+#       fullnameOverride: ""
 #       service:                       # auto-created, optional config
 #         type: ClusterIP
 #         port: 80
@@ -181,7 +185,8 @@ global:
 #         fcgi:
 #           enabled: false
 #           scriptFilename: ""
-#         proxyBodySize: ""
+#         proxyBodySize: ""            # quoted string: "512k", "50m", "1g" or bytes; "0" = no limit.
+#                                      # nginx: annotation; Traefik: buffering Middleware
 #         whitelistSourceRange: ""
 #         whitelistIpStrategy:       # Traefik only: how the client IP is picked (ipAllowList.ipStrategy)
 #           depth: 0                 # use the Nth IP from the right of X-Forwarded-For
