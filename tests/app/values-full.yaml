@@ -64,6 +64,9 @@ components:
       enabled: true
       type: ClusterIP
       port: 80
+    # Keep the Service / Ingress / TLS secret names of a previous deployment
+    # (Deployment and PDB keep <release>-<component>)
+    fullnameOverride: "legacy-web"
     ingress:
       enabled: true
       host: "app.example.com"
@@ -160,14 +163,28 @@ components:
     image: "myapp-web:v1.0.0"
     replicas: 2
     containerPort: 80
+    fullnameOverride: "legacy-traefik-web"
     ingress:
       enabled: true
       host: "traefik-app.example.com"
       className: traefik
+      # Rendered as a Traefik buffering Middleware (maxRequestBodyBytes: 209715200)
+      proxyBodySize: "200M"
       whitelistSourceRange: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
       whitelistIpStrategy:
         excludedIPs: "173.245.48.0/20,103.21.244.0/22,2400:cb00::/32"
         ipv6Subnet: 64
+
+  # "0" = no limit: no body-size Middleware and no router.middlewares entry for it
+  traefik-unlimited:
+    enabled: true
+    image: "myapp-web:v1.0.0"
+    containerPort: 80
+    ingress:
+      enabled: true
+      host: "traefik-unlimited.example.com"
+      className: traefik
+      proxyBodySize: "0"
 
 jobs:
   - name: db-migrate

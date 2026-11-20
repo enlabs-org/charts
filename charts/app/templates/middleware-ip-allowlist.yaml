@@ -9,7 +9,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: {{ include "app.componentFullname" (dict "releaseName" $.Release.Name "componentName" $componentName) }}-ip-allowlist
+  name: {{ include "app.componentPublicName" (dict "releaseName" $.Release.Name "componentName" $componentName "override" $component.fullnameOverride) }}-ip-allowlist
   labels:
     {{- include "app.componentLabels" (dict "root" $ "componentName" $componentName) | nindent 4 }}
     {{- with include "app.customLabels" (dict "global" $.Values.global "component" $component) }}

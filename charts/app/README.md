@@ -100,6 +100,7 @@ Each component supports the following configuration:
 | `replicas` | Number of replicas | `1` |
 | `strategy` | Deployment strategy (full Kubernetes syntax) | Kubernetes default |
 | `containerPort` | Container port (triggers service creation) | `null` |
+| `fullnameOverride` | Name of the Service, Ingress, TLS secret and Ingress helper objects (Traefik Middlewares, fcgi ConfigMap, auth secret). Deployment and PDB keep `<release>-<component>`. See [Keeping resource names](#keeping-resource-names-when-migrating) | `<release>-<component>` |
 | `command` | Container command | `null` |
 | `resources.requests` | Resource requests | `{}` |
 | `resources.limits` | Resource limits | `{}` |
@@ -132,10 +133,34 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 | `ingress.tls.issuer` | Certificate issuer | `letsencrypt` |
 | `ingress.wwwRedirect` | Redirect www subdomain | `false` |
 | `ingress.basicAuth.enabled` | Enable basic auth | `false` |
+| `ingress.proxyBodySize` | Maximum request body size, as a **quoted** string (`"512k"`, `"50m"`, `"1g"`, bytes). nginx: `proxy-body-size` annotation. Traefik: a `buffering` Middleware (`maxRequestBodyBytes`). `"0"` = no limit | not set |
 | `ingress.whitelistSourceRange` | IP whitelist (comma-separated) | `""` |
 | `ingress.whitelistIpStrategy` | Traefik only: `ipStrategy` of the allowlist (`depth`, `excludedIPs`, `ipv6Subnet`) — how the client IP is taken from `X-Forwarded-For` | not set (TCP peer) |
 | `ingress.securityPathFilter.enabled` | Block sensitive paths (overrides global) | `false` |
 | `ingress.securityPathFilter.blockedPaths` | Array of blocked paths (overrides global) | `[]` |
+
+#### Request body limit (nginx and Traefik)
+
+`ingress.proxyBodySize` works with both controllers. The ingress class decides how it is applied:
+
+```yaml
+components:
+  upload:
+    ingress:
+      enabled: true
+      className: traefik        # or nginx (default)
+      proxyBodySize: "200M"     # quote it, otherwise Helm turns large numbers into floats
+```
+
+- **nginx** – `nginx.ingress.kubernetes.io/proxy-body-size` annotation.
+- **Traefik** – a `Middleware` (`<name>-body-size`, `buffering.maxRequestBodyBytes`) referenced from
+  `traefik.ingress.kubernetes.io/router.middlewares`, together with the IP allowlist Middleware if
+  `whitelistSourceRange` is set. Requests above the limit get `413`.
+
+Traefik's `buffering` Middleware buffers the whole request before forwarding it (the part above its
+in-memory threshold goes to disk of the Traefik pod), unlike nginx, which only checks the size. For very
+large uploads, check the Traefik pod's ephemeral storage and timeouts. Without `proxyBodySize` (or with
+`"0"`) no Middleware is created and Traefik applies no limit, while ingress-nginx defaults to 1 MB.
 
 ### Deployment Strategy
 
@@ -756,6 +781,31 @@ components:
       enabled: true
 ```
 
+### Keeping resource names when migrating
+
+`stable-app` names its Deployment, Service, Ingress and TLS secret `<release>` / `<release>-tls`;
+`app` uses `<release>-<component>`. Switching charts therefore renames the Service (DNS name other
+services may call) and the TLS secret (a new certificate is issued, and until then clients get the
+ingress controller's default certificate). Set `fullnameOverride` on the component to keep the old names:
+
+```yaml
+components:
+  web:
+    fullnameOverride: myapp      # Service + Ingress `myapp`, TLS secret `myapp-tls` (as in stable-app)
+    containerPort: 9000
+    ingress:
+      enabled: true
+      host: myapp.example.com
+```
+
+- The **Deployment and the PDB keep `<release>-<component>`** on purpose: a Deployment selector is
+  immutable, and `stable-app` (`release: <name>`) and `app` (`app.kubernetes.io/*`) use different ones, so
+  reusing the old Deployment name would fail with `field is immutable`.
+- With one Argo CD Application (or one Helm release) the old Deployment is removed (pruned) and the new one
+  created. The Service keeps its name, but its selector changes to the new pods, so there is a short gap
+  until they are ready. Do the switch off-peak and enable `readinessProbe`.
+- `fullnameOverride` is cut to 63 characters and must be a valid DNS label.
+
 ## Testing
 
 Generate manifests locally:
@@ -775,6 +825,7 @@ make template-app-affinity
 
 ## Version History
 
+- **1.13.0** - Added `fullnameOverride` (keep Service / Ingress / TLS secret names when migrating from `stable-app`), `ingress.proxyBodySize` for Traefik (buffering Middleware, combined with the IP allowlist in one `router.middlewares` annotation)
 - **1.6.0** - Added optional deployment strategy configuration per component
 - **1.2.0** - Replaced server-snippet security path filter with standalone blocking Ingress, added global securityPathFilter support
 - **1.1.0** - Added comprehensive affinity support (node affinity, pod affinity, pod anti-affinity)
