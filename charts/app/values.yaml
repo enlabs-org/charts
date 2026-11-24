@@ -173,6 +173,9 @@ global:
 #           enabled: false             # set to false to disable TLS
 #           secretName: ""             # auto-generated if empty
 #           issuer: "letsencrypt"      # default: "letsencrypt"
+#           issueCertificate: true     # set false to skip the cert-manager annotation
+#                                      # and use an externally managed secretName
+#                                      # (e.g. a shared wildcard certificate)
 #         wwwRedirect: false
 #         basicAuth:
 #           enabled: false

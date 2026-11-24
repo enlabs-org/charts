@@ -130,6 +130,8 @@ Services are auto-created when `containerPort` or `ingress.enabled` is defined:
 | `ingress.pathType` | Path type | `Prefix` |
 | `ingress.tls.enabled` | Enable TLS | `true` |
 | `ingress.tls.issuer` | Certificate issuer | `letsencrypt` |
+| `ingress.tls.secretName` | TLS secret name | auto-generated |
+| `ingress.tls.issueCertificate` | Add the cert-manager annotation; set `false` to use an externally managed `secretName` (e.g. a shared wildcard certificate) | `true` |
 | `ingress.wwwRedirect` | Redirect www subdomain | `false` |
 | `ingress.basicAuth.enabled` | Enable basic auth | `false` |
 | `ingress.whitelistSourceRange` | IP whitelist (comma-separated) | `""` |

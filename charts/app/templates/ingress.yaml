@@ -23,7 +23,13 @@ metadata:
     {{- $tlsEnabled = $component.ingress.tls.enabled }}
     {{- end }}
     {{- end }}
-    {{- if $tlsEnabled }}
+    {{- $issueCertificate := true }}
+    {{- if $component.ingress.tls }}
+    {{- if kindIs "bool" $component.ingress.tls.issueCertificate }}
+    {{- $issueCertificate = $component.ingress.tls.issueCertificate }}
+    {{- end }}
+    {{- end }}
+    {{- if and $tlsEnabled $issueCertificate }}
     cert-manager.io/cluster-issuer: {{ ($component.ingress.tls).issuer | default "letsencrypt" }}
     {{- end }}
     {{- if $component.ingress.basicAuth }}
